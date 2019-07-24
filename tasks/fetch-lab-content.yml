@@ -12,7 +12,8 @@
     path: "/tmp/"
   register: __work_dir
 
-- set_fact:
+- name: Set temporary directory for checkout into a variable
+  set_fact:
     _lab_local_dir: "{{ __work_dir.path }}"
 
 - name: Clone lab repository into work_dir.
@@ -28,9 +29,11 @@
     chdir: "{{ _lab_local_dir }}"
   register: __git_repo_name
 
-- set_fact:
+- name: Set git repository name into a variable
+  set_fact:
     _lab_name: "{{ __git_repo_name.stdout }}"
 # TODO: Make sure all _ are replaced with -
 
-- debug:
+- name: Show fetch lab content info
+  debug:
     msg: "Local copy of {{ _lab_name }} located in {{ _lab_local_dir }}"

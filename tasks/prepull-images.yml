@@ -5,7 +5,8 @@
 #  - _lab_name
 # Outputs of this task:
 
-- debug:
+- name: Show contents of var images_to_prepull
+  debug:
     var: images_to_prepull
 
 - name: "Create temporary working directory to use as work_dir"
@@ -14,7 +15,8 @@
     path: "/tmp/"
   register: __work_dir
 
-- set_fact:
+- name: Set internal variables to use in task
+  set_fact:
     __work_dir: "{{ __work_dir.path }}"
     __daemonset_app_name: "prepull-{{ _lab_name }}"
 
@@ -31,11 +33,13 @@
   command: oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{ .items[*].metadata.name }'
   register: __worker_nodes
 
-- set_fact:
+- name: Nodeselector for 3.x
+  set_fact:
     __nodeselector: "node-role.kubernetes.io/compute: 'true'"
   when: __compute_nodes.stdout != ''
 
-- set_fact:
+- name: Nodeselector for 4.x
+  set_fact:
     __nodeselector: "node-role.kubernetes.io/worker:"
   when: __worker_nodes.stdout != ''
 

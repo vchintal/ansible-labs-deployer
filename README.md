@@ -31,8 +31,54 @@ Role Variables
 |`dashboard_version`      | 3.6.1 | Version of *workshop-dashboard* image to use |
 |`console_image_version`  | latest | Version of *openshift-console* image to use |
 
-OpenShift Version Compatibility
-------------
+## Running an example
+
+Install the role:
+
+```bash
+ansible-galaxy install openshift_labs.homeroom_labs_deployer
+```
+
+And now create your playbook (my-playbook.yml):
+
+```yaml
+- name: Example Playbook
+  hosts: localhost
+  connection: local
+  tasks:
+  - import_role:
+      name: homeroom_labs_deployer
+    vars:
+      project_name: "homeroom-labs"
+      lab_repo: "https://github.com/openshift-labs/lab-openshift-pipelines-with-tekton"
+      lab_description: "OpenShift Pipelines with Tekton"
+      workshop_image_name: "quay.io/openshiftlabs/lab-openshift-pipelines-with-tekton"
+      workshop_image_version: "master"
+```
+
+And execute it:
+
+```bash
+ansible-playbook my-playbook.yml
+```
+
+### Use a requirements file
+
+Create a requirements file (requirements.yml) to install the role:
+
+```yaml
+- src: openshift_labs.homeroom_labs_deployer
+  version: master
+  name: homeroom_labs_deployer
+```
+
+Install the role:
+
+```bash
+ansible-galaxy install -r requirements.yml -f
+```
+
+## OpenShift Version Compatibility
 
 When listing this role, make sure to pin the version of the role via one of the tags:
 
@@ -40,7 +86,9 @@ When listing this role, make sure to pin the version of the role via one of the 
 - src: openshift_labs.homeroom_labs_deployer
   version: 1.0.0
   name: homeroom_labs_deployer
-```  
+```
+
+__NOTE__: This should be set in a requirements.yml file and installed via `ansible-galaxy install -r requirements.yml -f`
 
 The following tables shows the version combinations that are tested and verified:
 
@@ -49,21 +97,3 @@ The following tables shows the version combinations that are tested and verified
 | 1.0.x        |    3.11.x, 4.1.x, 4.2.x   |
 
 Note that if a version combination is not listed above, it does NOT mean that it won't work on that version. The above table is merely the combinations that we have verified and tested.
-
-Example Playbook
-------------
-
-```yaml
-name: Example Playbook
-hosts: localhost
-connection: local
-tasks:
-- import_role:
-    name: openshift_labs.homeroom_labs_deployer
-  vars:
-    project_name: "homeroom-labs"
-    lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
-    lab_description: "Build an Operator"
-    workshop_image_name: "quay.io/openshiftlabs/lab-build-an-operator"
-    workshop_version: "master"
-```

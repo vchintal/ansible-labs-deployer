@@ -1,9 +1,9 @@
 ---
 - name: Check for required parameters
-  fail: 
+  fail:
     msg: "Variable '{{ item }}' has no value but is required"
-  when: vars[item] is not defined or vars[item]|trim == "" 
-  with_items: "{{required_vars}}"
+  when: vars[item] is not defined or vars[item]|trim == ""
+  with_items: "{{ required_vars }}"
 
 # TODO: Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume
 # you're logged in
@@ -48,7 +48,8 @@
     namespace: "{{ project_name }}"
   register: __homeroom_route
 
-- set_fact:
+- name: Set homeroom route
+  set_fact:
     __homeroom_route_url: "https://{{ __homeroom_route.resources[0].spec.host }}"
 
 - name: Create workshop resources
@@ -101,23 +102,27 @@
     namespace: "{{ project_name }}"
   register: __lab_route
 
-- set_fact:
+- name: Set lab route
+  set_fact:
     __lab_url: "https://{{ __lab_route.resources[0].spec.host }}"
 
 - name: Get homeroom configmap content
   shell: oc get cm/{{ __homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
   register: __homeroom_cm_data
 
-- set_fact:
+- name: Get contents of configmap as json
+  set_fact:
     __homeroom_cm_json: "{{ __homeroom_cm_data.stdout | from_json }}"
 
-- set_fact:
+- name: Calculate if workshop is already configured
+  set_fact:
     __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
   vars:
     my_query: "[?title=='{{ _lab_name }}']"
 
 # If it's there do nothing, else, add it
-- set_fact:
+- name: Set the list of workshops to reconfigure
+  set_fact:
     __workshop_list: "{{ ( __homeroom_cm_json | union(__this_workshop_json)) | default(__homeroom_cm_json) }}"
   when: not __workshop_present
 

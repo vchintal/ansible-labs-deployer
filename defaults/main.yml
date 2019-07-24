@@ -4,6 +4,8 @@ required_vars:
   - lab_repo
   - lab_branch
   - project_name
+  - workshop_image_name
+  - workshop_image_version
 
 # Name of the lab that will show in homeroom dashboard
 lab_description: ""
