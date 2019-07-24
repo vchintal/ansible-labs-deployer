@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  connection: local
+  remote_user: root
+  vars:
+    lab_repo: "https://github.com/openshift-labs/lab-build-an-operator" # TODO: This must be emptied
+    project_name: "openshift-labs-1"
+    lab_description: "Build an Operator"
+
+  roles:
+    - ../../openshift-labs-ansible-role.git

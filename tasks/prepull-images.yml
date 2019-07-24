@@ -1,0 +1,49 @@
+---
+# Inputs to this task:
+#  - images_to_prepull
+#  - project_name
+#  - _lab_name
+# Outputs of this task:
+
+- debug:
+    var: images_to_prepull
+
+- name: "Create temporary working directory to use as work_dir"
+  tempfile:
+    state: directory
+    path: "/tmp/"
+  register: __work_dir
+
+- set_fact:
+    __work_dir: "{{ __work_dir.path }}"
+    __daemonset_app_name: "prepull-{{ _lab_name }}"
+
+- name: Process prepull template
+  template:
+    src: "{{ role_path }}/templates/prepull.yaml.j2"
+    dest: "{{ __work_dir }}/prepull.yaml"
+
+- name: Check for nodeselector compute
+  command: oc get nodes -l node-role.kubernetes.io/compute -o jsonpath='{ .items[*].metadata.name }'
+  register: __compute_nodes
+
+- name: Check for nodeselector worker
+  command: oc get nodes -l node-role.kubernetes.io/worker -o jsonpath='{ .items[*].metadata.name }'
+  register: __worker_nodes
+
+- set_fact:
+    __nodeselector: "node-role.kubernetes.io/compute: 'true'"
+  when: __compute_nodes.stdout != ''
+
+- set_fact:
+    __nodeselector: "node-role.kubernetes.io/worker:"
+  when: __worker_nodes.stdout != ''
+
+- name: Create DaemonSet to Prepull images (targeting worker/compute nodes if defined, else all)
+  k8s:
+    state: present
+    src: "{{ __work_dir }}/prepull.yaml"
+    namespace: "{{ project_name }}"
+
+- name: Wait for images to be prepulled
+  command: oc rollout status daemonset/prepull-{{ _lab_name }} -n {{ project_name }}

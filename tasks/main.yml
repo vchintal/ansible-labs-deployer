@@ -1,0 +1,139 @@
+---
+- name: Check for required parameters
+  fail: 
+    msg: "Variable '{{ item }}' has no value but is required"
+  when: vars[item] is not defined or vars[item]|trim == "" 
+  with_items: "{{required_vars}}"
+
+# TODO: Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume
+# you're logged in
+
+# Inputs to this task:
+#  - lab_repo
+#  - lab_branch
+# Outputs of this task:
+#  - _lab_name
+#  - _lab_local_dir
+- include_tasks: fetch-lab-content.yml
+
+- name: Make sure target project {{ project_name }} exists. If not, create it.
+  k8s:
+    name: "{{ project_name }}"
+    api_version: project.openshift.io/v1
+    kind: Project
+    state: present
+
+# Inputs to this task:
+#  - images_to_prepull
+#  - project_name
+#  - _lab_name
+# Outputs of this task:
+- include_tasks: prepull-images.yml
+  when: 'images_to_prepull is defined'
+# TODO: If possible, check if there are images to prepull and list is not empty
+
+- name: Create homeroom resources
+  shell: >
+    oc process -f {{ __homeroom_template_path }} \
+    --param APPLICATION_NAME="{{ __homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
+
+- name: Wait for the homeroom to deploy
+  command: oc rollout status dc/{{ __homeroom_app_name }} -n {{ project_name }}
+
+- name: Get homeroom Route
+  k8s_facts:
+    api_version: "route.openshift.io/v1"
+    kind: Route
+    name: "{{ __homeroom_app_name }}"
+    namespace: "{{ project_name }}"
+  register: __homeroom_route
+
+- set_fact:
+    __homeroom_route_url: "https://{{ __homeroom_route.resources[0].spec.host }}"
+
+- name: Create workshop resources
+  shell: >
+    oc process -f {{ __spawner_template_path }} \
+    --param APPLICATION_NAME="{{ _lab_name }}" \
+    --param PROJECT_NAME="{{ project_name }}" \
+    --param HOMEROOM_LINK="{{ __homeroom_route_url }}" \
+    --param RESOURCE_BUDGET="{{ lab_resource_budget }}" \
+    --param GATEWAY_ENVVARS="{{ lab_gateway_envvars }}" \
+    --param TERMINAL_ENVVARS="{{ lab_terminal_envvars }}" \
+    --param WORKSHOP_ENVVARS="{{ lab_workshop_envvars }}" \
+    --param CONSOLE_VERSION="{{ lab_console_version }}" \
+    --param IDLE_TIMEOUT="{{ lab_idle_timeout }}" \
+    --param MAX_SESSION_AGE="{{ lab_max_session_age }}" \
+    --param JUPYTERHUB_CONFIG="{{ lab_jupyterhub_config }}" \
+    --param LETS_ENCRYPT="{{ lab_lets_encrypt }}" | oc apply -n {{ project_name }} -f -
+
+- name: Wait for the spawner to deploy
+  command: oc rollout status dc/{{ _lab_name }} -n {{ project_name }}
+
+# oc apply -f .workshop/resources/ --recursive
+- name: Apply global definitions
+  command: oc apply -f {{ _lab_local_dir }}/.workshop/resources/ --recursive
+
+- name: Update spawner configuration for workshop
+  shell: >
+     oc process -f {{ item }} \
+     --param SPAWNER_APPLICATION="{{ _lab_name }}" \
+     --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
+  loop:
+  - "{{ _lab_local_dir }}/.workshop/templates/clusterroles-session-rules.yaml"
+  - "{{ _lab_local_dir }}/.workshop/templates/clusterroles-spawner-rules.yaml"
+  - "{{ _lab_local_dir }}/.workshop/templates/configmap-extra-resources.yaml"
+
+- name: Restart the spawner with new configuration
+  command: oc rollout latest dc/{{ _lab_name }} -n {{ project_name }}
+
+- name: Wait for spawner to be restarted
+  command: oc rollout status dc/{{ _lab_name }} -n {{ project_name }}
+
+- name: Updating spawner to use image for workshop
+  command: oc tag "{{ __workshop_image }}" "{{ _lab_name }}-app:latest" -n {{ project_name }}
+
+- name: Get homeroom Route
+  k8s_facts:
+    api_version: "route.openshift.io/v1"
+    kind: Route
+    name: "{{ _lab_name }}"
+    namespace: "{{ project_name }}"
+  register: __lab_route
+
+- set_fact:
+    __lab_url: "https://{{ __lab_route.resources[0].spec.host }}"
+
+- name: Get homeroom configmap content
+  shell: oc get cm/{{ __homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
+  register: __homeroom_cm_data
+
+- set_fact:
+    __homeroom_cm_json: "{{ __homeroom_cm_data.stdout | from_json }}"
+
+- set_fact:
+    __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
+  vars:
+    my_query: "[?title=='{{ _lab_name }}']"
+
+# If it's there do nothing, else, add it
+- set_fact:
+    __workshop_list: "{{ ( __homeroom_cm_json | union(__this_workshop_json)) | default(__homeroom_cm_json) }}"
+  when: not __workshop_present
+
+# TODO: Change /tmp to a temporal location
+- name: Write homeroom configuration to a file
+  copy:
+    dest: /tmp/configmap.json
+    content: "{{ __workshop_list | to_nice_json }}"
+  when: __workshop_list is defined
+
+- name: Update homeroom ConfigMap
+  shell: oc create configmap {{ __homeroom_app_name }}-cfg --from-file=workshops.json=/tmp/configmap.json --dry-run -o yaml | oc replace -n {{ project_name }} -f -
+  when: __workshop_list is defined
+
+- name: Rollout homeroom to pickup config changes
+  command: oc rollout latest dc/{{ __homeroom_app_name }} -n {{ project_name }}
+
+- name: Wait for homeroom to be ready again
+  command: oc rollout status dc/{{ __homeroom_app_name }} -n {{ project_name }}

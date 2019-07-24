@@ -1,0 +1,36 @@
+---
+# Inputs to this task:
+#  - lab_repo
+#  - lab_branch
+# Outputs of this task:
+#  - _lab_name
+#  - _lab_local_dir
+
+- name: "Create temporary working directory to use as work_dir"
+  tempfile:
+    state: directory
+    path: "/tmp/"
+  register: __work_dir
+
+- set_fact:
+    _lab_local_dir: "{{ __work_dir.path }}"
+
+- name: Clone lab repository into work_dir.
+  git:
+    repo: "{{ lab_repo }}"
+    version: "{{ lab_branch }}"
+    dest: "{{ _lab_local_dir }}"
+  register: __git_repo
+
+- name: Get git details
+  shell: "basename -s .git `git config --get remote.origin.url`"
+  args:
+    chdir: "{{ _lab_local_dir }}"
+  register: __git_repo_name
+
+- set_fact:
+    _lab_name: "{{ __git_repo_name.stdout }}"
+# TODO: Make sure all _ are replaced with -
+
+- debug:
+    msg: "Local copy of {{ _lab_name }} located in {{ _lab_local_dir }}"

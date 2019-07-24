@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  remote_user: root
+  vars:
+    lab_repo: "https://github.com/openshift-labs/lab-kafka-operator"
+    lab_branch: "master"
+    project_name: "terminal-5"
+    lab_name: "lab-build-an-operator"
+    nodeselector: ""
+    required_vars:
+      - lab_repo
+      - lab_branch
+      - project_name
+
+    images_to_prepull: 
+      - image: "quay.io/openshiftlabs/workshop-dashboard:3.6.1"
+        name: "dashboard"
+  
+  tasks:
+    - debug:
+        var: images_to_prepull
+
