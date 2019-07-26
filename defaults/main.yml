@@ -3,29 +3,29 @@
 required_vars:
   - lab_repo
   - lab_branch
-  - project_name
-  - workshop_image_name
-  - workshop_image_version
 
-# Name of the lab that will show in homeroom dashboard
-lab_description: ""
 # Lab Git coordinates
 lab_repo: ""
 lab_branch: "master"
-# Name of the generated project in OpenShift
-project_name: "openshift-labs"
 
+#
+# DEFAULTS (Variables used in playbook are same but replacing default_ with lab_)
+#
+# Name of the generated project in OpenShift
+default_project_name: "openshift-labs"
+# Name of the lab that will show in homeroom dashboard
+default_workshop_name: ""
 # Lab specific configuration
-lab_resource_budget: "medium"
-lab_workshop_envvars: ""
-lab_terminal_envvars: ""
-lab_gateway_envvars: ""
+default_resource_budget: "medium"
+default_workshop_envvars: ""
+default_terminal_envvars: ""
+default_gateway_envvars: ""
 # TODO: Unify below variable
-lab_console_version: "4.1.0"
-lab_idle_timeout: 1800
-lab_max_session_age: 14400
-lab_lets_encrypt: false
-lab_jupyterhub_config: ""
+default_console_version: "4.1.0"
+default_idle_timeout: 1800
+default_max_session: 14400
+default_lets_encrypt: false
+default_jupyterhub_config: ""
 
 #
 # For homeroom
@@ -34,55 +34,33 @@ homeroom_version: "1.4.0"
 __homeroom_template_repo:  "https://raw.githubusercontent.com/openshift-labs/workshop-homeroom"
 homeroom_template_file: "production.json"
 __homeroom_template_path: "{{ __homeroom_template_repo }}/{{ homeroom_version }}/templates/{{ homeroom_template_file }}"
-__homeroom_app_name: "homeroom"
+default_homeroom_app_name: "homeroom"
 __homeroom_image_name: "quay.io/openshiftlabs/workshop-homeroom"
 __homeroom_image: "{{ __homeroom_image_name }}:{{ homeroom_version }}"
+
 __this_workshop_json: 
   - title: "{{ _lab_name }}"
-    description: "{{ lab_description }}"
+    description: "{{ lab_workshop_name }}"
     url: "{{ __lab_url }}"
-
-#
-# For this workshop
-#
-# TODO: Remove (or not)
-workshop_image_name: "" # "quay.io/openshiftlabs/lab-build-an-operator"
-workshop_image_version: "" #"1.0"
-__workshop_image: "{{ workshop_image_name }}:{{ workshop_image_version }}"
 
 #
 # For spawner and dashboard
 #
-spawner_version: "4.2.0"
-spawner_template_file: "learning-portal-production.json"
-__spawner_template_repo: "https://raw.githubusercontent.com/openshift-labs/workshop-spawner"
-__spawner_template_path: "{{ __spawner_template_repo }}/{{ spawner_version }}/templates/{{ spawner_template_file }}"
-__spawner_image_name: "quay.io/openshiftlabs/workshop-spawner"
-__spawner_image: "{{ __spawner_image_name }}:{{ spawner_version }}"
+#spawner_version: "4.2.0"
+#lab_spawner_mode: "learning-portal-production.json"
+#__spawner_template_repo: "https://raw.githubusercontent.com/openshift-labs/workshop-spawner"
+#__spawner_template_path: "{{ __spawner_template_repo }}/{{ spawner_version }}/templates/{{ lab_spawner_mode }}"
+lab_spawner_image: "quay.io/openshiftlabs/workshop-spawner"
+#__spawner_image: "{{ __spawner_image_name }}:{{ spawner_version }}"
 #
-__dashboard_image_name: "quay.io/openshiftlabs/workshop-dashboard"
-dashboard_version: "3.6.1"
-__dashboard_image: "{{ __dashboard_image_name }}:{{ dashboard_version }}"
+lab_dashboard_image: "quay.io/openshiftlabs/workshop-dashboard"
+#dashboard_version: "3.6.1"
+#__dashboard_image: "{{ __dashboard_image_name }}:{{ dashboard_version }}"
 
 #
 # For OpenShift console UI
 #
-__console_image_name: "quay.io/openshift/origin-console"
-console_image_version: "latest"
-__console_image: "{{ __console_image_name }}:{{ console_image_version }}"
+default_console_image_name: "quay.io/openshift/origin-console"
+# console_image_version: "latest"
 
-#
-# For prepull daemonset
-#
 __nodeselector: ""
-images_to_prepull: 
-  - image: "{{ __homeroom_image }}"
-    name: "homeroom"
-  - image: "{{ __dashboard_image }}"
-    name: "dashboard"
-  - image: "{{ __spawner_image }}"
-    name: "spawner"
-  - image: "{{ __console_image }}"
-    name: "console"
-  - image: "{{ __workshop_image }}"
-    name: "workshop"

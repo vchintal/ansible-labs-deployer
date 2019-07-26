@@ -3,10 +3,11 @@
   connection: local
   remote_user: root
   vars:
-    lab_repo: "https://github.com/openshift-labs/lab-kafka-operator"
+    lab_repo: "https://github.com/openshift-homeroom/lab-asciidoc-sample"
     lab_branch: "master"
     project_name: "terminal-5"
     lab_name: "lab-build-an-operator"
+    _lab_local_dir: /tmp/git-checkout-test
     nodeselector: ""
     required_vars:
       - lab_repo
@@ -18,6 +19,82 @@
         name: "dashboard"
   
   tasks:
-    - debug:
-        var: images_to_prepull
+    - name: Clone lab repository into work_dir.
+      git:
+        repo: "{{ lab_repo }}"
+        version: "{{ lab_branch }}"
+        dest: "{{ _lab_local_dir }}"
+        track_submodules: yes
+        force: no
+      register: __git_repo
 
+    - name: Read file 
+      command: cat {{_lab_local_dir}}/.workshop/scripts/default-settings.sh
+      register: default_settings
+
+    - name: Show file contents
+      debug:
+        var: default_settings
+
+    - name: Process vars in default settings
+      set_fact:
+        workshop_image: "{{ default_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.*)') | first }}"
+        spawner_repo: "{{ default_settings.stdout | regex_findall('SPAWNER_REPO=(.*)') | first}}"
+        spawner_version: "{{ default_settings.stdout | regex_findall('SPAWNER_VERSION=(.*)') | first}}"
+        spawner_mode: "{{ default_settings.stdout | regex_findall('SPAWNER_MODE=(.*)') | first}}"
+        spawner_variant: "{{ default_settings.stdout | regex_findall('SPAWNER_VARIANT=(.*)') | first}}"
+        dashboard_repo: "{{ default_settings.stdout | regex_findall('DASHBOARD_REPO=(.*)') | first}}"
+        dashboard_version: "{{ default_settings.stdout | regex_findall('DASHBOARD_VERSION=(.*)') | first}}"
+        dashboard_variant: "{{ default_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.*)') | first}}"
+        resource_budget: "{{ default_settings.stdout | regex_findall('RESOURCE_BUDGET=(.*)') | first}}"
+        max_session: "{{ default_settings.stdout | regex_findall('MAX_SESSION_AGE=(.*)') | first}}"
+        idle_timeout: "{{ default_settings.stdout | regex_findall('IDLE_TIMEOUT=(.*)') | first}}"
+        lets_encrypt: "{{ default_settings.stdout | regex_findall('LETS_ENCRYPT=(.*)') | first}}"
+
+    - name: Read file 
+      command: cat {{_lab_local_dir}}/.workshop/settings.sh
+      register: workshop_settings
+
+    - name: Show file contents
+      debug:
+        var: workshop_settings
+
+    - name: Override vars with workshop settings
+      set_fact:
+        workshop_name: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | first }}"
+        workshop_image: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | first }}"
+        spawner_mode: "{{ workshop_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
+        spawner_variant: "{{ workshop_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
+        dashboard_repo: "{{ workshop_settings.stdout | regex_findall('DASHBOARD_REPO=(.+)') | default('', true ) | first | default(dashboard_repo, true) }}"
+        dashboard_version: "{{ default_settings.stdout | regex_findall('DASHBOARD_VERSION=(.+)') | default('', true ) | first | default(dashboard_version, true) }}"
+        dashboard_variant: "{{ workshop_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | default('', true ) | first | default(dashboard_variant, true) }}"
+        resource_budget: "{{ workshop_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | default('', true ) | first | default(resource_budget, true) }}"
+        max_session: "{{ workshop_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | default('', true ) | first | default(max_session, true) }}"
+        idle_timeout: "{{ workshop_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
+        lets_encrypt: "{{ workshop_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | default('', true ) | first | default(lets_encrypt, true) }}"
+
+    - name: Show variables
+      debug:
+        msg: 
+          - "workshop_name = {{workshop_name}}"
+          - "workshop_image =  {{ workshop_image }}"
+          - "spawner_repo = {{spawner_repo}}"
+          - "spawner_version =  {{ spawner_version }}"
+          - "spawner_mode = {{ spawner_mode }}"
+          - "spawner_variant = {{ spawner_variant }}"
+          - "dashboard_repo = {{ dashboard_repo }}"
+          - "dashboard_version = {{dashboard_version }}"
+          - "dashboard_variant = {{dashboard_variant }}"
+          - "resource_budget = {{resource_budget }}"
+          - "max_session = {{max_session }}"
+          - "idle_timeout = {{idle_timeout }}"
+          - "lets_encrypt = {{lets_encrypt }}"
+
+    - name: Creating spawner application
+      set_fact:
+        lab_additional_args: "--param RESOURCE_BUDGET={{ resource_budget }} --param MAX_SESSION_AGE={{ max_session }}"
+      when: spawner_mode == 'learning-portal'
+
+    - name: Show variables
+      debug:
+        var: lab_additional_args

@@ -21,7 +21,7 @@ Role Variables
 |`lab_gateway_envvars`    |  | Additional environment variables to be provided to the gateway |
 |`lab_console_version`    | 4.1.0 | Version of the OpenShift console to use in the workshop |
 |`lab_idle_timeout`       | 1800 | Maximum time (in seconds) a session can be idled |
-|`lab_max_session_age`    | 14400 | Maximum time (in seconds) a session can live. After this time it will be deleted no matter what |
+|`lab_max_session`        | 14400 | Maximum time (in seconds) a session can live. After this time it will be deleted no matter what |
 |`lab_lets_encrypt`       | false | Does the workshop require a secured route via Let's Encrypt |
 |`lab_jupyterhub_config`  |  | Additional configuration to be provided to the spawner |
 |`homeroom_version`       | 1.4.0 | Version of *workshop-homeroom* image to use |

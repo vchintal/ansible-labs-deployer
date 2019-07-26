@@ -2,7 +2,7 @@
 # Inputs to this task:
 #  - images_to_prepull
 #  - project_name
-#  - _lab_name
+#  - lab_workshop_name
 # Outputs of this task:
 
 - name: Show contents of var images_to_prepull
@@ -18,7 +18,7 @@
 - name: Set internal variables to use in task
   set_fact:
     __work_dir: "{{ __work_dir.path }}"
-    __daemonset_app_name: "prepull-{{ _lab_name }}"
+    __daemonset_app_name: "prepull-{{ lab_workshop_name }}"
 
 - name: Process prepull template
   template:
@@ -50,4 +50,4 @@
     namespace: "{{ project_name }}"
 
 - name: Wait for images to be prepulled
-  command: oc rollout status daemonset/prepull-{{ _lab_name }} -n {{ project_name }}
+  command: oc rollout status daemonset/prepull-{{ lab_workshop_name }} -n {{ project_name }}
