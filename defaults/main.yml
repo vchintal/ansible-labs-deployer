@@ -8,11 +8,14 @@ required_vars:
 lab_repo: ""
 lab_branch: "master"
 
+# Install homeroom
+install_homeroom: true
+
 #
 # DEFAULTS (Variables used in playbook are same but replacing default_ with lab_)
 #
 # Name of the generated project in OpenShift
-default_project_name: "openshift-labs"
+default_project_name: "openshift-homeroom"
 # Name of the lab that will show in homeroom dashboard
 default_workshop_name: ""
 # Lab specific configuration
@@ -30,37 +33,21 @@ default_jupyterhub_config: ""
 #
 # For homeroom
 #
+homeroom_image: "quay.io/openshiftlabs/workshop-homeroom:1.4.0"
 homeroom_version: "1.4.0"
-__homeroom_template_repo:  "https://raw.githubusercontent.com/openshift-labs/workshop-homeroom"
-homeroom_template_file: "production.json"
-__homeroom_template_path: "{{ __homeroom_template_repo }}/{{ homeroom_version }}/templates/{{ homeroom_template_file }}"
+homeroom_template_path: "https://raw.githubusercontent.com/openshift-labs/workshop-homeroom/{{ homeroom_version }}/templates/production.json"
 default_homeroom_app_name: "homeroom"
-__homeroom_image_name: "quay.io/openshiftlabs/workshop-homeroom"
-__homeroom_image: "{{ __homeroom_image_name }}:{{ homeroom_version }}"
+__homeroom_route_url: ""
+
+spawner_template_path: "https://raw.githubusercontent.com/{{ lab_spawner_repo }}/{{ lab_spawner_version }}/templates/{{ lab_spawner_mode }}-{{ lab_spawner_variant }}.json"
 
 __this_workshop_json: 
-  - title: "{{ _lab_name }}"
+  - title: "{{ lab_workshop_name }}"
     description: "{{ lab_workshop_name }}"
     url: "{{ __lab_url }}"
 
-#
-# For spawner and dashboard
-#
-#spawner_version: "4.2.0"
-#lab_spawner_mode: "learning-portal-production.json"
-#__spawner_template_repo: "https://raw.githubusercontent.com/openshift-labs/workshop-spawner"
-#__spawner_template_path: "{{ __spawner_template_repo }}/{{ spawner_version }}/templates/{{ lab_spawner_mode }}"
-lab_spawner_image: "quay.io/openshiftlabs/workshop-spawner"
-#__spawner_image: "{{ __spawner_image_name }}:{{ spawner_version }}"
-#
-lab_dashboard_image: "quay.io/openshiftlabs/workshop-dashboard"
-#dashboard_version: "3.6.1"
-#__dashboard_image: "{{ __dashboard_image_name }}:{{ dashboard_version }}"
-
-#
-# For OpenShift console UI
-#
-default_console_image_name: "quay.io/openshift/origin-console"
-# console_image_version: "latest"
+# TODO: DELETE
+lab_console_image: "quay.io/openshift/origin-console:4.1.0"
+lab_console_version: "4.1.0"
 
 __nodeselector: ""

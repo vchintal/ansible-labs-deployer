@@ -5,8 +5,9 @@
   when: vars[item] is not defined or vars[item]|trim == ""
   with_items: "{{ required_vars }}"
 
-# TODO: Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume
-# you're logged in
+# TODO: 
+# - Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume you're logged in
+# - Make homeroom installation optional
 
 # Inputs to this task:
 #  - lab_repo
@@ -23,16 +24,20 @@
   set_fact:
     lab_spawner_repo: "{{ lab_spawner_repo | default(spawner_repo, true) }}"
     lab_spawner_version: "{{ lab_spawner_version | default(spawner_version, true) }}"
+    lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
     lab_spawner_mode: "{{ lab_spawner_mode | default(spawner_mode, true) }}"
     lab_spawner_variant: "{{ lab_spawner_variant | default(spawner_variant, true) }}"
-    lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
 
 - name: Assign lab variables to use (dashboard)
   set_fact:
     lab_dashboard_repo: "{{ lab_dashboard_repo | default(dashboard_repo, true) }}"
     lab_dashboard_version: "{{ lab_dashboard_version | default(dashboard_version, true) }}"
-    lab_dashboard_variant: "{{ lab_dashboard_variant | default(dashboard_variant, true) }}"
     lab_dashboard_image: "{{ lab_dashboard_image | default(dashboard_image, true) }}"
+    lab_dashboard_variant: "{{ lab_dashboard_variant | default(dashboard_variant, true) }}"
+
+- name: Assign lab variables to use (terminal)
+  set_fact:
+    lab_terminal_image: "{{ lab_terminal_image | default(terminal_image, true) }}"
 
 - name: Assign lab variables to use (workshop additional vars)
   set_fact:
@@ -43,8 +48,7 @@
 
 - name: Assign lab variables to use (envvars)
   set_fact:
-    lab_console_version: "4.1.0" # TODO: Change
-    __spawner_template_path: "https://raw.githubusercontent.com/{{ lab_spawner_repo }}/{{ lab_spawner_version }}/templates/{{ lab_spawner_mode }}-{{ lab_spawner_variant }}.json"
+    lab_console_image: "{{ lab_console_image | default(console_image, true) }}"
     lab_workshop_envvars: "{{ default_workshop_envvars }}"
     lab_terminal_envvars: "{{ default_terminal_envvars }}"
     lab_gateway_envvars: "{{ default_gateway_envvars }}"
@@ -53,13 +57,15 @@
 - name: Assign lab variables to use (images_to_prepull)
   set_fact:
     images_to_prepull: 
-      - image: "{{ __homeroom_image }}"
+      - image: "{{ homeroom_image }}"
         name: "homeroom"
-      - image: "{{ lab_dashboard_image }}:{{ lab_dashboard_version }}"
+      - image: "{{ lab_dashboard_image }}"
         name: "dashboard"
-      - image: "{{ lab_spawner_image }}:{{ lab_spawner_version }}"
+      - image: "{{ lab_spawner_image }}"
         name: "spawner"
-      - image: "{{ default_console_image_name }}:{{ lab_console_version }}"
+      - image: "{{ lab_terminal_image }}"
+        name: "terminal"
+      - image: "{{ lab_console_image }}"
         name: "console"
       - image: "{{ lab_workshop_image }}"
         name: "workshop"
@@ -82,11 +88,13 @@
 
 - name: Create homeroom resources
   shell: >
-    oc process -f {{ __homeroom_template_path }} \
+    oc process -f {{ homeroom_template_path }} \
     --param APPLICATION_NAME="{{ default_homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
+  when: install_homeroom
 
 - name: Wait for the homeroom to deploy
   command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+  when: install_homeroom
 
 - name: Get homeroom Route
   k8s_facts:
@@ -95,10 +103,12 @@
     name: "{{ default_homeroom_app_name }}"
     namespace: "{{ project_name }}"
   register: __homeroom_route
+  when: install_homeroom
 
 - name: Set homeroom route
   set_fact:
     __homeroom_route_url: "https://{{ __homeroom_route.resources[0].spec.host }}"
+  when: install_homeroom
 
 - name: Get lab_cluster_subdomain
   block:
@@ -161,7 +171,7 @@
 
 - name: Create workshop resources
   shell: >
-    oc process -f {{ __spawner_template_path }} \
+    oc process -f {{ spawner_template_path }} \
     --param PROJECT_NAME="{{ project_name }}" \
     --param APPLICATION_NAME="{{ lab_workshop_name }}" \
     --param GATEWAY_ENVVARS="{{ lab_gateway_envvars }}" \
@@ -235,44 +245,57 @@
     name: "{{ lab_workshop_name }}"
     namespace: "{{ project_name }}"
   register: __lab_route
+  when: install_homeroom
 
 - name: Set lab route
   set_fact:
     __lab_url: "https://{{ __lab_route.resources[0].spec.host }}"
+  when: install_homeroom
 
 - name: Get homeroom configmap content
   shell: oc get cm/{{ default_homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
   register: __homeroom_cm_data
+  when: install_homeroom
 
 - name: Get contents of configmap as json
   set_fact:
     __homeroom_cm_json: "{{ __homeroom_cm_data.stdout | from_json }}"
+  when: install_homeroom
 
 - name: Calculate if workshop is already configured
   set_fact:
     __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
   vars:
     my_query: "[?title=='{{ lab_workshop_name }}']"
+  when: install_homeroom
 
 # If it's there do nothing, else, add it
 - name: Set the list of workshops to reconfigure
   set_fact:
     __workshop_list: "{{ ( __homeroom_cm_json | union(__this_workshop_json)) | default(__homeroom_cm_json) }}"
-  when: not __workshop_present
+  when:
+    - install_homeroom 
+    - not __workshop_present
 
 # TODO: Change /tmp to a temporal location
 - name: Write homeroom configuration to a file
   copy:
     dest: /tmp/configmap.json
     content: "{{ __workshop_list | to_nice_json }}"
-  when: __workshop_list is defined
+  when:
+    - install_homeroom 
+    - __workshop_list is defined
 
 - name: Update homeroom ConfigMap
   shell: oc create configmap {{ default_homeroom_app_name }}-cfg --from-file=workshops.json=/tmp/configmap.json --dry-run -o yaml | oc replace -n {{ project_name }} -f -
-  when: __workshop_list is defined
+  when:
+    - install_homeroom 
+    - __workshop_list is defined
 
 - name: Rollout homeroom to pickup config changes
   command: oc rollout latest dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+  when: install_homeroom
 
 - name: Wait for homeroom to be ready again
   command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+  when: install_homeroom
