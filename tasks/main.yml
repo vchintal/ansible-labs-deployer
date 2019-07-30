@@ -7,7 +7,6 @@
 
 # TODO: 
 # - Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume you're logged in
-# - Make homeroom installation optional
 
 # Inputs to this task:
 #  - lab_repo
@@ -86,28 +85,27 @@
   when: 'images_to_prepull is defined'
 # TODO: If possible, check if there are images to prepull and list is not empty
 
-- name: Create homeroom resources
-  shell: >
-    oc process -f {{ homeroom_template_path }} \
-    --param APPLICATION_NAME="{{ default_homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
-  when: install_homeroom
+- name: Deploy homeroom
+  block:
+    - name: Create homeroom resources
+      shell: >
+        oc process -f {{ homeroom_template_path }} \
+        --param APPLICATION_NAME="{{ default_homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
 
-- name: Wait for the homeroom to deploy
-  command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
-  when: install_homeroom
+    - name: Wait for the homeroom to deploy
+      command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
 
-- name: Get homeroom Route
-  k8s_facts:
-    api_version: "route.openshift.io/v1"
-    kind: Route
-    name: "{{ default_homeroom_app_name }}"
-    namespace: "{{ project_name }}"
-  register: __homeroom_route
-  when: install_homeroom
+    - name: Get homeroom Route
+      k8s_facts:
+        api_version: "route.openshift.io/v1"
+        kind: Route
+        name: "{{ default_homeroom_app_name }}"
+        namespace: "{{ project_name }}"
+      register: __homeroom_route
 
-- name: Set homeroom route
-  set_fact:
-    __homeroom_route_url: "https://{{ __homeroom_route.resources[0].spec.host }}"
+    - name: Set homeroom route
+      set_fact:
+        __homeroom_route_url: "https://{{ __homeroom_route.resources[0].spec.host }}"
   when: install_homeroom
 
 - name: Get lab_cluster_subdomain
@@ -238,64 +236,54 @@
 - name: Updating spawner to use image for workshop
   command: oc tag "{{ lab_workshop_image }}" "{{ lab_workshop_name }}-app:latest" -n {{ project_name }}
 
-- name: Get lab route to add to homeroom
-  k8s_facts:
-    api_version: "route.openshift.io/v1"
-    kind: Route
-    name: "{{ lab_workshop_name }}"
-    namespace: "{{ project_name }}"
-  register: __lab_route
-  when: install_homeroom
+- name: Update homeroom with the workshop
+  block:
+    - name: Get lab route to add to homeroom
+      k8s_facts:
+        api_version: "route.openshift.io/v1"
+        kind: Route
+        name: "{{ lab_workshop_name }}"
+        namespace: "{{ project_name }}"
+      register: __lab_route
 
-- name: Set lab route
-  set_fact:
-    __lab_url: "https://{{ __lab_route.resources[0].spec.host }}"
-  when: install_homeroom
+    - name: Set lab route
+      set_fact:
+        __lab_url: "https://{{ __lab_route.resources[0].spec.host }}"
 
-- name: Get homeroom configmap content
-  shell: oc get cm/{{ default_homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
-  register: __homeroom_cm_data
-  when: install_homeroom
+    - name: Get homeroom configmap content
+      shell: oc get cm/{{ default_homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
+      register: __homeroom_cm_data
 
-- name: Get contents of configmap as json
-  set_fact:
-    __homeroom_cm_json: "{{ __homeroom_cm_data.stdout | from_json }}"
-  when: install_homeroom
+    - name: Get contents of configmap as json
+      set_fact:
+        __homeroom_cm_json: "{{ __homeroom_cm_data.stdout | from_json }}"
 
-- name: Calculate if workshop is already configured
-  set_fact:
-    __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
-  vars:
-    my_query: "[?title=='{{ lab_workshop_name }}']"
-  when: install_homeroom
+    - name: Calculate if workshop is already configured
+      set_fact:
+        __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
+      vars:
+        my_query: "[?title=='{{ lab_workshop_name }}']"
 
-# If it's there do nothing, else, add it
-- name: Set the list of workshops to reconfigure
-  set_fact:
-    __workshop_list: "{{ ( __homeroom_cm_json | union(__this_workshop_json)) | default(__homeroom_cm_json) }}"
-  when:
-    - install_homeroom 
-    - not __workshop_present
+    # If it's there do nothing, else, add it
+    - name: Set the list of workshops to reconfigure
+      set_fact:
+        __workshop_list: "{{ ( __homeroom_cm_json | union(__this_workshop_json)) | default(__homeroom_cm_json) }}"
+      when: not __workshop_present
 
-# TODO: Change /tmp to a temporal location
-- name: Write homeroom configuration to a file
-  copy:
-    dest: /tmp/configmap.json
-    content: "{{ __workshop_list | to_nice_json }}"
-  when:
-    - install_homeroom 
-    - __workshop_list is defined
+    # TODO: Change /tmp to a temporal location
+    - name: Write homeroom configuration to a file
+      copy:
+        dest: /tmp/configmap.json
+        content: "{{ __workshop_list | to_nice_json }}"
+      when: __workshop_list is defined
 
-- name: Update homeroom ConfigMap
-  shell: oc create configmap {{ default_homeroom_app_name }}-cfg --from-file=workshops.json=/tmp/configmap.json --dry-run -o yaml | oc replace -n {{ project_name }} -f -
-  when:
-    - install_homeroom 
-    - __workshop_list is defined
+    - name: Update homeroom ConfigMap
+      shell: oc create configmap {{ default_homeroom_app_name }}-cfg --from-file=workshops.json=/tmp/configmap.json --dry-run -o yaml | oc replace -n {{ project_name }} -f -
+      when: __workshop_list is defined
 
-- name: Rollout homeroom to pickup config changes
-  command: oc rollout latest dc/{{ default_homeroom_app_name }} -n {{ project_name }}
-  when: install_homeroom
+    - name: Rollout homeroom to pickup config changes
+      command: oc rollout latest dc/{{ default_homeroom_app_name }} -n {{ project_name }}
 
-- name: Wait for homeroom to be ready again
-  command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+    - name: Wait for homeroom to be ready again
+      command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
   when: install_homeroom

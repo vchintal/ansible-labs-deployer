@@ -4,6 +4,7 @@
   vars:
     lab_repo: "https://github.com/openshift-homeroom/lab-asciidoc-sample"
     project_name: "new-labs-1"
+#    install_homeroom: false
 
   roles:
     - ../../openshift-homeroom-labs-deployer-ansible-role.git
