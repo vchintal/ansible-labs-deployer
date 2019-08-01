@@ -16,18 +16,12 @@ install_homeroom: true
 #
 # Name of the generated project in OpenShift
 default_project_name: "openshift-homeroom"
-# Name of the lab that will show in homeroom dashboard
-default_workshop_name: ""
+default_homeroom_app_name: "homeroom"
 # Lab specific configuration
-default_resource_budget: "medium"
+# TODO: Get from config files and remove from here
 default_workshop_envvars: ""
 default_terminal_envvars: ""
 default_gateway_envvars: ""
-# TODO: Unify below variable
-default_console_version: "4.1.0"
-default_idle_timeout: 1800
-default_max_session: 14400
-default_lets_encrypt: false
 default_jupyterhub_config: ""
 
 #
@@ -36,18 +30,13 @@ default_jupyterhub_config: ""
 homeroom_image: "quay.io/openshiftlabs/workshop-homeroom:1.4.0"
 homeroom_version: "1.4.0"
 homeroom_template_path: "https://raw.githubusercontent.com/openshift-labs/workshop-homeroom/{{ homeroom_version }}/templates/production.json"
-default_homeroom_app_name: "homeroom"
 __homeroom_route_url: ""
 
 spawner_template_path: "https://raw.githubusercontent.com/{{ lab_spawner_repo }}/{{ lab_spawner_version }}/templates/{{ lab_spawner_mode }}-{{ lab_spawner_variant }}.json"
 
 __this_workshop_json: 
   - title: "{{ lab_workshop_name }}"
-    description: "{{ lab_workshop_name }}"
+    description: "{{ lab_workshop_description }}"
     url: "{{ __lab_url }}"
-
-# TODO: DELETE
-lab_console_image: "quay.io/openshift/origin-console:4.1.0"
-lab_console_version: "4.1.0"
 
 __nodeselector: ""

@@ -59,7 +59,7 @@
     dashboard_image: "{{ default_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | first}}"
     dashboard_variant: "{{ default_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | first}}"
     terminal_image: "{{ default_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | first}}"
-#    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | first}}"
+    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | first}}"
     resource_budget: "{{ default_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | first}}"
     max_session: "{{ default_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | first}}"
     idle_timeout: "{{ default_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | first}}"
@@ -73,10 +73,14 @@
   debug:
     var: workshop_settings
 
-- name: Override vars with workshop specific settings
+- name: Override vars with workshop specific settings (REQUIRED)
   set_fact:
     workshop_name: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | first }}"
     workshop_image: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | first }}"
+
+- name: Override vars with workshop specific settings (OPTIONAL)
+  set_fact:
+    workshop_description: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_DESCRIPTION=(.+)') | default('', true ) | first | default(workshop_name, true) }}"
     spawner_mode: "{{ workshop_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
     spawner_image: "{{ workshop_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
     spawner_variant: "{{ workshop_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
@@ -85,7 +89,7 @@
     dashboard_image: "{{ default_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | default('', true ) | first | default(dashboard_image, true) }}"
     dashboard_variant: "{{ workshop_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | default('', true ) | first | default(dashboard_variant, true) }}"
     terminal_image: "{{ default_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | default('', true ) | first | default(terminal_image, true) }}"
-#    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
+    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
     resource_budget: "{{ workshop_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | default('', true ) | first | default(resource_budget, true) }}"
     max_session: "{{ workshop_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | default('', true ) | first | default(max_session, true) }}"
     idle_timeout: "{{ workshop_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
@@ -96,6 +100,7 @@
     msg: 
       - "workshop_name = {{workshop_name}}"
       - "workshop_image =  {{ workshop_image }}"
+      - "workshop_description = {{workshop_description}}"
       - "spawner_repo = {{spawner_repo}}"
       - "spawner_version =  {{ spawner_version }}"
       - "spawner_mode = {{ spawner_mode }}"
@@ -106,7 +111,7 @@
       - "dashboard_image = {{dashboard_image }}"
       - "dashboard_variant = {{dashboard_variant }}"
       - "terminal_image = {{ terminal_image }}"
-#      - "console_image = {{ console_image }}"
+      - "console_image = {{ console_image }}"
       - "resource_budget = {{resource_budget }}"
       - "max_session = {{max_session }}"
       - "idle_timeout = {{idle_timeout }}"

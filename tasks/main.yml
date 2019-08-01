@@ -17,7 +17,9 @@
   set_fact:
     project_name: "{{ project_name | default(default_project_name, true) }}"
     lab_workshop_name: "{{ lab_workshop_name | default(workshop_name, true) }}"
+    lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
     lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
+    homeroom_app_name: "{{ homeroom_app_name | default(default_homeroom_app_name, true) }}"
 
 - name: Assign lab variables to use (spawner)
   set_fact:
@@ -90,16 +92,16 @@
     - name: Create homeroom resources
       shell: >
         oc process -f {{ homeroom_template_path }} \
-        --param APPLICATION_NAME="{{ default_homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
+        --param APPLICATION_NAME="{{ homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
 
     - name: Wait for the homeroom to deploy
-      command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+      command: oc rollout status dc/{{ homeroom_app_name }} -n {{ project_name }}
 
     - name: Get homeroom Route
       k8s_facts:
         api_version: "route.openshift.io/v1"
         kind: Route
-        name: "{{ default_homeroom_app_name }}"
+        name: "{{ homeroom_app_name }}"
         namespace: "{{ project_name }}"
       register: __homeroom_route
 
@@ -141,23 +143,23 @@
 
 - name: Creating spawner application
   set_fact:
-    lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_VERSION=\"{{ lab_console_version }}\" --param MAX_SESSION_AGE=\"{{ max_session }}\""
+    lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ max_session }}\""
   when: spawner_mode == 'learning-portal'
 
 - name: Creating spawner application
   set_fact:
-    lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_VERSION=\"{{ lab_console_version }}\""
+    lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\""
   when: spawner_mode == 'user-workspace'
 
 - name: Creating spawner application
   set_fact:
-    lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ lab_cluster_subdomain }}\" --param CONSOLE_VERSION=\"{{ lab_console_version }}\""
+    lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\""
   when: spawner_mode == 'hosted-workshop'
 # TODO: This mode does not work with homeroom
 
 - name: Creating spawner application
   set_fact:
-    lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ lab_cluster_subdomain }}\" --param CONSOLE_VERSION=\"{{ lab_console_version }}\""
+    lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\""
   when: spawner_mode == 'terminal-server'
 # TODO: This mode does not work with homeroom
 
@@ -251,7 +253,7 @@
         __lab_url: "https://{{ __lab_route.resources[0].spec.host }}"
 
     - name: Get homeroom configmap content
-      shell: oc get cm/{{ default_homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
+      shell: oc get cm/{{ homeroom_app_name }}-cfg -o jsonpath='{ .data.workshops\.json }' -n {{ project_name }}
       register: __homeroom_cm_data
 
     - name: Get contents of configmap as json
@@ -278,12 +280,12 @@
       when: __workshop_list is defined
 
     - name: Update homeroom ConfigMap
-      shell: oc create configmap {{ default_homeroom_app_name }}-cfg --from-file=workshops.json=/tmp/configmap.json --dry-run -o yaml | oc replace -n {{ project_name }} -f -
+      shell: oc create configmap {{ homeroom_app_name }}-cfg --from-file=workshops.json=/tmp/configmap.json --dry-run -o yaml | oc replace -n {{ project_name }} -f -
       when: __workshop_list is defined
 
     - name: Rollout homeroom to pickup config changes
-      command: oc rollout latest dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+      command: oc rollout latest dc/{{ homeroom_app_name }} -n {{ project_name }}
 
     - name: Wait for homeroom to be ready again
-      command: oc rollout status dc/{{ default_homeroom_app_name }} -n {{ project_name }}
+      command: oc rollout status dc/{{ homeroom_app_name }} -n {{ project_name }}
   when: install_homeroom

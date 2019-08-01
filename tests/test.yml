@@ -2,8 +2,9 @@
 - hosts: localhost
   connection: local
   vars:
-    lab_repo: "https://github.com/openshift-homeroom/lab-asciidoc-sample"
-    project_name: "new-labs-1"
+    lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
+    lab_workshop_description: "Automate applications with k8s operators"
+    project_name: "new-labs-5"
 #    install_homeroom: false
 
   roles:
