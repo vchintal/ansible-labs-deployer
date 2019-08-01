@@ -81,6 +81,20 @@ Install the role:
 ansible-galaxy install -r requirements.yml -f
 ```
 
+## Use meta/main.yaml
+
+Add the dependency to your role including it in the `dependencies` section of your meta. This will execute that role with the provided vars.
+
+```yaml
+dependencies:
+  - role: openshift_labs.homeroom_labs_deployer
+    version: master
+    name: homeroom_labs_deployer
+    vars:
+      lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
+      lab_workshop_description: "Automate applications with k8s operators"
+```
+
 ## OpenShift Version Compatibility
 
 When listing this role, make sure to pin the version of the role via one of the tags:
