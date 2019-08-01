@@ -236,7 +236,7 @@
   command: oc rollout status dc/{{ lab_workshop_name }} -n {{ project_name }}
 
 - name: Updating spawner to use image for workshop
-  command: oc tag "{{ lab_workshop_image }}" "{{ lab_workshop_name }}-app:latest" -n {{ project_name }}
+  command: oc tag "{{ lab_workshop_image }}" "{{ lab_workshop_name }}:latest" -n {{ project_name }}
 
 - name: Update homeroom with the workshop
   block:
