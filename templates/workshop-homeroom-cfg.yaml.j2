@@ -4,13 +4,13 @@ metadata:
   labels:
     app: homeroom
     role: lab
-  name: homeroom-cfg-{{ lab_workshop_app_name }}
+  name: homeroom-cfg-{{ internal_lab_workshop_app_name }}
 data:
   workshops.json: | -
     [
       {
-        "title": "{{ lab_workshop_description }}",
-        "description": "{{ lab_workshop_description }}",
+        "title": "{{ internal_lab_workshop_description }}",
+        "description": "{{ internal_lab_workshop_description }}",
         "url": "{{ __lab_url }}"
       }
     ]

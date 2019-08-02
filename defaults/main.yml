@@ -34,11 +34,11 @@ homeroom_version: "1.4.0"
 homeroom_template_path: "https://raw.githubusercontent.com/openshift-labs/workshop-homeroom/{{ homeroom_version }}/templates/production.json"
 __homeroom_route_url: ""
 
-spawner_template_path: "https://raw.githubusercontent.com/{{ lab_spawner_repo }}/{{ lab_spawner_version }}/templates/{{ lab_spawner_mode }}-{{ lab_spawner_variant }}.json"
+__spawner_template_path: "https://raw.githubusercontent.com/{{ internal_lab_spawner_repo }}/{{ internal_lab_spawner_version }}/templates/{{ internal_lab_spawner_mode }}-{{ internal_lab_spawner_variant }}.json"
 
 __this_workshop_json: 
-  - title: "{{ lab_workshop_name }}"
-    description: "{{ lab_workshop_description }}"
+  - title: "{{ internal_lab_workshop_name }}"
+    description: "{{ internal_lab_workshop_description }}"
     url: "{{ __lab_url }}"
 
 __nodeselector: ""

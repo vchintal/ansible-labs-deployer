@@ -28,62 +28,62 @@
 - name: Assign lab variables to use (workshop)
   set_fact:
     project_name: "{{ project_name | default(default_project_name, true) }}"
-    lab_workshop_app_name: "{{ lab_workshop_app_name | default(workshop_app_name, true) }}"
-    lab_workshop_name: "{{ lab_workshop_name | default(workshop_name, true) }}"
-    lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
-    lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
-    lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
+    internal_lab_workshop_app_name: "{{ lab_workshop_app_name | default(workshop_app_name, true) }}"
+    internal_lab_workshop_name: "{{ lab_workshop_name | default(workshop_name, true) }}"
+    internal_lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
+    internal_lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
+    internal_lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
     homeroom_app_name: "{{ homeroom_app_name | default(default_homeroom_app_name, true) }}"
 
 - name: Assign lab variables to use (spawner)
   set_fact:
-    lab_spawner_repo: "{{ lab_spawner_repo | default(spawner_repo, true) }}"
-    lab_spawner_version: "{{ lab_spawner_version | default(spawner_version, true) }}"
-    lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
-    lab_spawner_mode: "{{ lab_spawner_mode | default(spawner_mode, true) }}"
-    lab_spawner_variant: "{{ lab_spawner_variant | default(spawner_variant, true) }}"
+    internal_lab_spawner_repo: "{{ lab_spawner_repo | default(spawner_repo, true) }}"
+    internal_lab_spawner_version: "{{ lab_spawner_version | default(spawner_version, true) }}"
+    internal_lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
+    internal_lab_spawner_mode: "{{ lab_spawner_mode | default(spawner_mode, true) }}"
+    internal_lab_spawner_variant: "{{ lab_spawner_variant | default(spawner_variant, true) }}"
 
 - name: Assign lab variables to use (dashboard)
   set_fact:
-    lab_dashboard_repo: "{{ lab_dashboard_repo | default(dashboard_repo, true) }}"
-    lab_dashboard_version: "{{ lab_dashboard_version | default(dashboard_version, true) }}"
-    lab_dashboard_image: "{{ lab_dashboard_image | default(dashboard_image, true) }}"
-    lab_dashboard_variant: "{{ lab_dashboard_variant | default(dashboard_variant, true) }}"
+    internal_lab_dashboard_repo: "{{ lab_dashboard_repo | default(dashboard_repo, true) }}"
+    internal_lab_dashboard_version: "{{ lab_dashboard_version | default(dashboard_version, true) }}"
+    internal_lab_dashboard_image: "{{ lab_dashboard_image | default(dashboard_image, true) }}"
+    internal_lab_dashboard_variant: "{{ lab_dashboard_variant | default(dashboard_variant, true) }}"
 
 - name: Assign lab variables to use (terminal)
   set_fact:
-    lab_terminal_image: "{{ lab_terminal_image | default(terminal_image, true) }}"
+    internal_lab_terminal_image: "{{ lab_terminal_image | default(terminal_image, true) }}"
 
 - name: Assign lab variables to use (workshop additional vars)
   set_fact:
-    lab_resource_budget: "{{ lab_resource_budget | default(resource_budget, true) }}"
-    lab_max_session: "{{ lab_max_session | default(max_session, true) }}"
-    lab_idle_timeout: "{{ lab_idle_timeout | default(idle_timeout, true) }}"
-    lab_server_limit: "{{ lab_server_limit | default(server_limit, true) }}"
-    lab_lets_encrypt: "{{ lab_lets_encrypt | default(lets_encrypt, true) }}"
+    internal_lab_resource_budget: "{{ lab_resource_budget | default(resource_budget, true) }}"
+    internal_lab_max_session: "{{ lab_max_session | default(max_session, true) }}"
+    internal_lab_idle_timeout: "{{ lab_idle_timeout | default(idle_timeout, true) }}"
+    internal_lab_server_limit: "{{ lab_server_limit | default(server_limit, true) }}"
+    internal_lab_lets_encrypt: "{{ lab_lets_encrypt | default(lets_encrypt, true) }}"
 
 - name: Assign lab variables to use (envvars)
   set_fact:
-    lab_console_image: "{{ lab_console_image | default(console_image, true) }}"
-    lab_workshop_envvars: "{{ default_workshop_envvars }}"
-    lab_terminal_envvars: "{{ default_terminal_envvars }}"
-    lab_gateway_envvars: "{{ default_gateway_envvars }}"
-    lab_jupyterhub_config: "{{ default_jupyterhub_config }}"
+    internal_lab_console_image: "{{ lab_console_image | default(console_image, true) }}"
+    internal_lab_workshop_envvars: "{{ default_workshop_envvars }}"
+    internal_lab_terminal_envvars: "{{ default_terminal_envvars }}"
+    internal_lab_gateway_envvars: "{{ default_gateway_envvars }}"
+    internal_lab_jupyterhub_config: "{{ default_jupyterhub_config }}"
 
 - name: Assign lab variables to use (images_to_prepull)
   set_fact:
     images_to_prepull: 
       - image: "{{ homeroom_image }}"
         name: "homeroom"
-      - image: "{{ lab_dashboard_image }}"
+      - image: "{{ internal_lab_dashboard_image }}"
         name: "dashboard"
-      - image: "{{ lab_spawner_image }}"
+      - image: "{{ internal_lab_spawner_image }}"
         name: "spawner"
-      - image: "{{ lab_terminal_image }}"
+      - image: "{{ internal_lab_terminal_image }}"
         name: "terminal"
-      - image: "{{ lab_console_image }}"
+      - image: "{{ internal_lab_console_image }}"
         name: "console"
-      - image: "{{ lab_workshop_image }}"
+      - image: "{{ internal_lab_workshop_image }}"
         name: "workshop"
 
 - name: Execute with the correct k8s context
@@ -101,7 +101,7 @@
   # Inputs to this task:
   #  - images_to_prepull
   #  - project_name
-  #  - lab_workshop_app_name
+  #  - internal_lab_workshop_app_name
   # Outputs of this task:
   - include_tasks: prepull-images.yml
     when: 'images_to_prepull is defined'
@@ -109,13 +109,30 @@
 
   - name: Deploy homeroom
     block:
+      - name: Get homeroom deployment
+        k8s_facts:
+          api_version: "apps.openshift.io/v1"
+          kind: DeploymentConfig
+          name: "{{ homeroom_app_name }}"
+          namespace: "{{ project_name }}"
+        register: __homeroom_dc
+
+      - name: Is homeroom installed
+        set_fact:
+          __homeroom_installed: "{{ __homeroom_dc.resources[0].status.replicas == 1 }}"
+      
+      - debug:
+          var: __homeroom_installed
+
       - name: Create homeroom resources
         shell: >
           oc process -f {{ homeroom_template_path }} \
           --param APPLICATION_NAME="{{ homeroom_app_name }}" | oc apply -n {{ project_name }} -f -
+        when: not __homeroom_installed
 
       - name: Wait for the homeroom to deploy
         command: oc rollout status dc/{{ homeroom_app_name }} -n {{ project_name }}
+        when: not __homeroom_installed
 
       - name: Get homeroom Route
         k8s_facts:
@@ -153,7 +170,7 @@
           namespace: "{{ project_name }}"
         register: dummy_route
       - set_fact:
-          lab_cluster_subdomain: "{{ dummy_route.resources[0].spec.host|regex_replace('^dummy-' + project_name + '\\.(.*)$', '\\1') }}"
+          internal_lab_cluster_subdomain: "{{ dummy_route.resources[0].spec.host|regex_replace('^dummy-' + project_name + '\\.(.*)$', '\\1') }}"
       - k8s:
           state: absent
           api_version: "route.openshift.io/v1"
@@ -163,46 +180,46 @@
 
   - name: Creating spawner application
     set_fact:
-      lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ lab_max_session }}\" --param SERVER_LIMIT=\"{{ lab_server_limit }}\" --param WORKSHOP_FILE=\"{{ lab_workshop_file }}\""
+      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ internal_lab_max_session }}\" --param SERVER_LIMIT=\"{{ internal_lab_server_limit }}\" --param WORKSHOP_FILE=\"{{ internal_lab_workshop_file }}\""
     when: spawner_mode == 'learning-portal'
 
   - name: Creating spawner application
     set_fact:
-      lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\""
+      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
     when: spawner_mode == 'user-workspace'
 
   - name: Creating spawner application
     set_fact:
-      lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\""
+      internal_lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ internal_lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
     when: spawner_mode == 'hosted-workshop'
   # TODO: This mode does not work with homeroom
 
   - name: Creating spawner application
     set_fact:
-      lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\""
+      internal_lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ internal_lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
     when: spawner_mode == 'terminal-server'
   # TODO: This mode does not work with homeroom
 
   - name: Creating spawner application
     set_fact:
-      lab_additional_args: ""
+      internal_lab_additional_args: ""
     when: spawner_mode == 'jumpbox-server'
   # TODO: This mode does not work with homeroom
 
   - name: Create workshop resources
     shell: >
-      oc process -f {{ spawner_template_path }} \
+      oc process -f {{ __spawner_template_path }} \
       --param PROJECT_NAME="{{ project_name }}" \
-      --param APPLICATION_NAME="{{ lab_workshop_app_name }}" \
-      --param GATEWAY_ENVVARS="{{ lab_gateway_envvars }}" \
-      --param TERMINAL_ENVVARS="{{ lab_terminal_envvars }}" \
-      --param WORKSHOP_ENVVARS="{{ lab_workshop_envvars }}" \
-      --param IDLE_TIMEOUT="{{ lab_idle_timeout }}" \
-      --param JUPYTERHUB_CONFIG="{{ lab_jupyterhub_config }}" \
-      --param LETS_ENCRYPT="{{ lab_lets_encrypt }}" {{ lab_additional_args }} | oc apply -n "{{ project_name }}" -f -
+      --param APPLICATION_NAME="{{ internal_lab_workshop_app_name }}" \
+      --param GATEWAY_ENVVARS="{{ internal_lab_gateway_envvars }}" \
+      --param TERMINAL_ENVVARS="{{ internal_lab_terminal_envvars }}" \
+      --param WORKSHOP_ENVVARS="{{ internal_lab_workshop_envvars }}" \
+      --param IDLE_TIMEOUT="{{ internal_lab_idle_timeout }}" \
+      --param JUPYTERHUB_CONFIG="{{ internal_lab_jupyterhub_config }}" \
+      --param LETS_ENCRYPT="{{ internal_lab_lets_encrypt }}" {{ internal_lab_additional_args }} | oc apply -n "{{ project_name }}" -f -
 
   - name: Wait for the spawner to deploy
-    command: oc rollout status dc/{{ lab_workshop_app_name }} -n {{ project_name }}
+    command: oc rollout status dc/{{ internal_lab_workshop_app_name }} -n {{ project_name }}
 
   - name: Check if resources dir exist
     stat:
@@ -221,7 +238,7 @@
   - name: Update spawner configuration for workshop (clusterroles-session-rules)
     shell: >
       oc process -f {{ _lab_local_dir }}/.workshop/templates/clusterroles-session-rules.yaml \
-      --param SPAWNER_APPLICATION="{{ lab_workshop_app_name }}" \
+      --param SPAWNER_APPLICATION="{{ internal_lab_workshop_app_name }}" \
       --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
     when: clusterroles_session_rules.stat.isreg is defined and clusterroles_session_rules.stat.isreg
 
@@ -233,7 +250,7 @@
   - name: Update spawner configuration for workshop (clusterroles-spawner-rules)
     shell: >
       oc process -f {{ _lab_local_dir }}/.workshop/templates/clusterroles-spawner-rules.yaml \
-      --param SPAWNER_APPLICATION="{{ lab_workshop_app_name }}" \
+      --param SPAWNER_APPLICATION="{{ internal_lab_workshop_app_name }}" \
       --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
     when: clusterroles_spawner_rules.stat.isreg is defined and clusterroles_spawner_rules.stat.isreg
 
@@ -245,18 +262,18 @@
   - name: Update spawner configuration for workshop (configmap-extra-resources)
     shell: >
       oc process -f {{ _lab_local_dir }}/.workshop/templates/configmap-extra-resources.yaml \
-      --param SPAWNER_APPLICATION="{{ lab_workshop_app_name }}" \
+      --param SPAWNER_APPLICATION="{{ internal_lab_workshop_app_name }}" \
       --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
     when: configmap_extra_resources.stat.isreg is defined and configmap_extra_resources.stat.isreg
 
   - name: Restart the spawner with new configuration
-    command: oc rollout latest dc/{{ lab_workshop_app_name }} -n {{ project_name }}
+    command: oc rollout latest dc/{{ internal_lab_workshop_app_name }} -n {{ project_name }}
 
   - name: Wait for spawner to be restarted
-    command: oc rollout status dc/{{ lab_workshop_app_name }} -n {{ project_name }}
+    command: oc rollout status dc/{{ internal_lab_workshop_app_name }} -n {{ project_name }}
 
   - name: Updating spawner to use image for workshop
-    command: oc tag "{{ lab_workshop_image }}" "{{ lab_workshop_app_name }}:latest" -n {{ project_name }}
+    command: oc tag "{{ internal_lab_workshop_image }}" "{{ internal_lab_workshop_app_name }}:latest" -n {{ project_name }}
 
   - name: Update homeroom with the workshop
     block:
@@ -264,7 +281,7 @@
         k8s_facts:
           api_version: "route.openshift.io/v1"
           kind: Route
-          name: "{{ lab_workshop_app_name }}"
+          name: "{{ internal_lab_workshop_app_name }}"
           namespace: "{{ project_name }}"
         register: __lab_route
 
@@ -284,7 +301,7 @@
         set_fact:
           __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
         vars:
-          my_query: "[?title=='{{ lab_workshop_app_name }}']"
+          my_query: "[?title=='{{ internal_lab_workshop_app_name }}']"
 
       # If it's there do nothing, else, add it
       - name: Set the list of workshops to reconfigure
