@@ -76,12 +76,9 @@
 
 - name: Override vars with workshop specific settings (REQUIRED)
   set_fact:
-    workshop_name: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | first }}"
+    workshop_app_name: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | first }}"
     workshop_image: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | first }}"
-
-- name: Override vars with workshop specific settings (OPTIONAL)
-  set_fact:
-    workshop_description: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_DESCRIPTION=(.+)') | default('', true ) | first | default(workshop_name, true) }}"
+    workshop_file: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default('', true ) | first | default(default_workshop_file, true) }}"
     spawner_mode: "{{ workshop_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
     spawner_image: "{{ workshop_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
     spawner_variant: "{{ workshop_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
@@ -106,19 +103,14 @@
   - name: Read file for event specific settings
     command: cat {{_lab_local_dir}}/.workshop/{{ event }}-settings.sh
     register: event_settings
-
   - name: Show file .workshop/{{ event }}-settings.sh contents
     debug:
       var: event_settings
-
   - name: Override vars with event specific settings (REQUIRED)
     set_fact:
-      workshop_name: "{{ event_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | default('', true ) | first | default(workshop_name, true)}}"
+      workshop_app_name: "{{ event_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | default('', true ) | first | default(workshop_app_name, true)}}"
       workshop_image: "{{ event_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | default('', true ) | first | default(workshop_image, true)}}"
-
-  - name: Override vars with event specific settings (OPTIONAL)
-    set_fact:
-      workshop_description: "{{ event_settings.stdout | regex_findall('WORKSHOP_DESCRIPTION=(.+)') | default('', true ) | first | default(workshop_name, true) }}"
+      workshop_file: "{{ event_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default('', true ) | first | default(workshop_file, true) }}"
       spawner_mode: "{{ event_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
       spawner_image: "{{ event_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
       spawner_variant: "{{ event_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
@@ -133,14 +125,24 @@
       server_limit: "{{ event_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | default('', true ) | first | default(server_limit, true) }}"
       idle_timeout: "{{ event_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
       lets_encrypt: "{{ event_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | default('', true ) | first | default(lets_encrypt, true) }}"
-
   when: event is defined and event|trim != ""
+
+- name: Read {{ workshop_file }} contents for additional workshop info
+  include_vars:
+    file: "{{_lab_local_dir}}/workshop/{{ workshop_file }}"
+    name: workshop_vars
+
+- name: Get name and description of the workshop
+  set_fact:
+    workshop_name: "{{ workshop_vars.name }}"
+    workshop_description: "{{ workshop_vars.description | default(workshop_vars.name, true) }}"
 
 - name: Show variables to use for workshop
   debug:
     msg: 
-      - "workshop_name = {{ workshop_name }}"
+      - "workshop_app_name = {{ workshop_app_name }}"
       - "workshop_image =  {{ workshop_image }}"
+      - "workshop_name = {{ workshop_name }}"
       - "workshop_description = {{ workshop_description }}"
       - "spawner_repo = {{ spawner_repo }}"
       - "spawner_version =  {{ spawner_version }}"
@@ -158,3 +160,4 @@
       - "idle_timeout = {{ idle_timeout }}"
       - "server_limit = {{ server_limit }}"
       - "lets_encrypt = {{ lets_encrypt }}"
+      - "workshop name = {{ workshop_vars.name }}"

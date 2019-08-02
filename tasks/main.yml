@@ -16,6 +16,7 @@
 - name: Assign lab variables to use (workshop)
   set_fact:
     project_name: "{{ project_name | default(default_project_name, true) }}"
+    lab_workshop_app_name: "{{ lab_workshop_app_name | default(workshop_app_name, true) }}"
     lab_workshop_name: "{{ lab_workshop_name | default(workshop_name, true) }}"
     lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
     lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
@@ -82,7 +83,7 @@
 # Inputs to this task:
 #  - images_to_prepull
 #  - project_name
-#  - lab_workshop_name
+#  - lab_workshop_app_name
 # Outputs of this task:
 - include_tasks: prepull-images.yml
   when: 'images_to_prepull is defined'
@@ -174,7 +175,7 @@
   shell: >
     oc process -f {{ spawner_template_path }} \
     --param PROJECT_NAME="{{ project_name }}" \
-    --param APPLICATION_NAME="{{ lab_workshop_name }}" \
+    --param APPLICATION_NAME="{{ lab_workshop_app_name }}" \
     --param GATEWAY_ENVVARS="{{ lab_gateway_envvars }}" \
     --param TERMINAL_ENVVARS="{{ lab_terminal_envvars }}" \
     --param WORKSHOP_ENVVARS="{{ lab_workshop_envvars }}" \
@@ -183,7 +184,7 @@
     --param LETS_ENCRYPT="{{ lab_lets_encrypt }}" {{ lab_additional_args }} | oc apply -n "{{ project_name }}" -f -
 
 - name: Wait for the spawner to deploy
-  command: oc rollout status dc/{{ lab_workshop_name }} -n {{ project_name }}
+  command: oc rollout status dc/{{ lab_workshop_app_name }} -n {{ project_name }}
 
 - name: Check if resources dir exist
   stat:
@@ -202,7 +203,7 @@
 - name: Update spawner configuration for workshop (clusterroles-session-rules)
   shell: >
      oc process -f {{ _lab_local_dir }}/.workshop/templates/clusterroles-session-rules.yaml \
-     --param SPAWNER_APPLICATION="{{ lab_workshop_name }}" \
+     --param SPAWNER_APPLICATION="{{ lab_workshop_app_name }}" \
      --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
   when: clusterroles_session_rules.stat.isreg is defined and clusterroles_session_rules.stat.isreg
 
@@ -214,7 +215,7 @@
 - name: Update spawner configuration for workshop (clusterroles-spawner-rules)
   shell: >
      oc process -f {{ _lab_local_dir }}/.workshop/templates/clusterroles-spawner-rules.yaml \
-     --param SPAWNER_APPLICATION="{{ lab_workshop_name }}" \
+     --param SPAWNER_APPLICATION="{{ lab_workshop_app_name }}" \
      --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
   when: clusterroles_spawner_rules.stat.isreg is defined and clusterroles_spawner_rules.stat.isreg
 
@@ -226,18 +227,18 @@
 - name: Update spawner configuration for workshop (configmap-extra-resources)
   shell: >
      oc process -f {{ _lab_local_dir }}/.workshop/templates/configmap-extra-resources.yaml \
-     --param SPAWNER_APPLICATION="{{ lab_workshop_name }}" \
+     --param SPAWNER_APPLICATION="{{ lab_workshop_app_name }}" \
      --param SPAWNER_NAMESPACE="{{ project_name }}" | oc apply -n {{ project_name }} -f -
   when: configmap_extra_resources.stat.isreg is defined and configmap_extra_resources.stat.isreg
 
 - name: Restart the spawner with new configuration
-  command: oc rollout latest dc/{{ lab_workshop_name }} -n {{ project_name }}
+  command: oc rollout latest dc/{{ lab_workshop_app_name }} -n {{ project_name }}
 
 - name: Wait for spawner to be restarted
-  command: oc rollout status dc/{{ lab_workshop_name }} -n {{ project_name }}
+  command: oc rollout status dc/{{ lab_workshop_app_name }} -n {{ project_name }}
 
 - name: Updating spawner to use image for workshop
-  command: oc tag "{{ lab_workshop_image }}" "{{ lab_workshop_name }}:latest" -n {{ project_name }}
+  command: oc tag "{{ lab_workshop_image }}" "{{ lab_workshop_app_name }}:latest" -n {{ project_name }}
 
 - name: Update homeroom with the workshop
   block:
@@ -245,7 +246,7 @@
       k8s_facts:
         api_version: "route.openshift.io/v1"
         kind: Route
-        name: "{{ lab_workshop_name }}"
+        name: "{{ lab_workshop_app_name }}"
         namespace: "{{ project_name }}"
       register: __lab_route
 
@@ -265,7 +266,7 @@
       set_fact:
         __workshop_present: "{{ __homeroom_cm_json | json_query(my_query) }}"
       vars:
-        my_query: "[?title=='{{ lab_workshop_name }}']"
+        my_query: "[?title=='{{ lab_workshop_app_name }}']"
 
     # If it's there do nothing, else, add it
     - name: Set the list of workshops to reconfigure

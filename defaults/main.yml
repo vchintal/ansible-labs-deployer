@@ -18,6 +18,7 @@ install_homeroom: true
 # Name of the generated project in OpenShift
 default_project_name: "openshift-homeroom"
 default_homeroom_app_name: "homeroom"
+default_workshop_file: "workshop.yaml"
 # Lab specific configuration
 # TODO: Get from config files and remove from here
 default_workshop_envvars: ""

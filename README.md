@@ -16,7 +16,8 @@ Role Variables
 |`install_homeroom`       | true | Should it install the homeroom application |
 |`project_name`           | openshift-homeroom | Name of the project where the workshops will be deployed. If the project does not exist, it will create it |
 |`homeroom_app_name`      | homeroom | Name of the resources generated for homeroom |
-|`lab_workshop_name`        |  | Name of the lab. This will be the name of the generated k8s resources. |
+|`lab_workshop_app_name`  |  | Name of the generated k8s resources for the workshop |
+|`lab_workshop_name`        |  | Name of the lab to show in the homeroom tile |
 |`lab_workshop_description` |  | Description for the lab to show in the homeroom tile |
 |`lab_workshop_image`     |  | Full image location for the workshop (e.g. quay.io/openshiftlabs/lab-build-an-operator:v1.0.0). It should include the version|
 |`lab_spawner_repo`     | | Location of *workshop-spawner* repository to use |
@@ -59,6 +60,7 @@ And now create your playbook (my-playbook.yml):
       name: homeroom_labs_deployer
     vars:
       lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
+      lab_workshop_name: "Build an operator"
       lab_workshop_description: "Automate applications with k8s operators"
 ```
 
