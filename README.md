@@ -1,8 +1,10 @@
-Ansible Role: lab-build-an-operator
-[![Build Status](https://travis-ci.org/openshiftlabs/openshift-homeroom-labs-deployer-ansible-role.svg?branch=master)](https://travis-ci.org/openshiftlabs/openshift-homeroom-labs-deployer-ansible-role)
+Ansible Role: homeroom_labs_deployer
+[![Build Status](https://travis-ci.org/openshifthomeroom/ansible-labs-deployer.svg?branch=master)](https://travis-ci.org/openshifthomeroom/ansible-labs-deployer)
 =========
 
-Ansible Role for deploying the Lab "Build an Operator" on OpenShift
+Ansible Role for deploying "Homeroom labs" on OpenShift.
+
+__NOTE__: Despite the fact that this repository is named `ansible-lab-deployer` the role is named `homeroom_labs_deployer`.
 
 Role Variables
 ------------
@@ -82,6 +84,8 @@ ansible-galaxy install -r requirements.yml -f
 ```
 
 ## Use meta/main.yaml
+
+_NOTE_: this is kind of a hack to use this within a role
 
 Add the dependency to your role including it in the `dependencies` section of your meta. This will execute that role with the provided vars.
 

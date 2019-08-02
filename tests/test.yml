@@ -8,4 +8,4 @@
 #    install_homeroom: false
 
   roles:
-    - ../../openshift-homeroom-labs-deployer-ansible-role.git
+    - ../../ansible-labs-deployer
