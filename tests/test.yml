@@ -5,9 +5,7 @@
     lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
     lab_branch: "rhte19"
     event: "rhte19"
-    lab_workshop_name: "Build an operator"
-    lab_workshop_description: "Automate applications with k8s operators"
-    project_name: "new-labs-7"
+    project_name: "new-labs-9"
 #    install_homeroom: false
 
   roles:

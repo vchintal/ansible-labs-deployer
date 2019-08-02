@@ -9,10 +9,10 @@
 - name: "Create temporary working directory to use as work_dir"
   tempfile:
     state: directory
-    path: "/tmp/"
+    path: "{{ tmp_dir.path }}"
   register: __work_dir
 
-- name: Set temporary directory for checkout into a variable
+- name: Set temporary directory for checkout into a variable {{ __work_dir.path }}
   set_fact:
     _lab_local_dir: "{{ __work_dir.path }}"
 
@@ -142,6 +142,7 @@
     msg: 
       - "workshop_app_name = {{ workshop_app_name }}"
       - "workshop_image =  {{ workshop_image }}"
+      - "workshop_file =  {{ workshop_file }}"
       - "workshop_name = {{ workshop_name }}"
       - "workshop_description = {{ workshop_description }}"
       - "spawner_repo = {{ spawner_repo }}"

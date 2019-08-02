@@ -20,6 +20,7 @@ Role Variables
 |`lab_workshop_name`        |  | Name of the lab to show in the homeroom tile |
 |`lab_workshop_description` |  | Description for the lab to show in the homeroom tile |
 |`lab_workshop_image`     |  | Full image location for the workshop (e.g. quay.io/openshiftlabs/lab-build-an-operator:v1.0.0). It should include the version|
+|`lab_workshop_file`        | `workshop.yaml` | Name of the workshop definition file to use (in lab_repo/workshop directory) |
 |`lab_spawner_repo`     | | Location of *workshop-spawner* repository to use |
 |`lab_spawner_version`  | | Tag of *workshop-spawner* repository to use |
 |`lab_spawner_image`    | | *workshop-spawner* image to use |
