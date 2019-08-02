@@ -62,6 +62,7 @@
     console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | first}}"
     resource_budget: "{{ default_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | first}}"
     max_session: "{{ default_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | first}}"
+    server_limit: "{{ default_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | first}}"
     idle_timeout: "{{ default_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | first}}"
     lets_encrypt: "{{ default_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | first}}"
 
@@ -92,16 +93,56 @@
     console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
     resource_budget: "{{ workshop_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | default('', true ) | first | default(resource_budget, true) }}"
     max_session: "{{ workshop_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | default('', true ) | first | default(max_session, true) }}"
+    server_limit: "{{ workshop_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | default('', true ) | first | default(server_limit, true) }}"
     idle_timeout: "{{ workshop_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
     lets_encrypt: "{{ workshop_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | default('', true ) | first | default(lets_encrypt, true) }}"
+
+- name: Check for event variable
+  debug:
+    var: event
+
+- name: Read event specific configuration if event is defined
+  block:
+  - name: Read file for event specific settings
+    command: cat {{_lab_local_dir}}/.workshop/{{ event }}-settings.sh
+    register: event_settings
+
+  - name: Show file .workshop/{{ event }}-settings.sh contents
+    debug:
+      var: event_settings
+
+  - name: Override vars with event specific settings (REQUIRED)
+    set_fact:
+      workshop_name: "{{ event_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | default('', true ) | first | default(workshop_name, true)}}"
+      workshop_image: "{{ event_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | default('', true ) | first | default(workshop_image, true)}}"
+
+  - name: Override vars with event specific settings (OPTIONAL)
+    set_fact:
+      workshop_description: "{{ event_settings.stdout | regex_findall('WORKSHOP_DESCRIPTION=(.+)') | default('', true ) | first | default(workshop_name, true) }}"
+      spawner_mode: "{{ event_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
+      spawner_image: "{{ event_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
+      spawner_variant: "{{ event_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
+      dashboard_repo: "{{ event_settings.stdout | regex_findall('DASHBOARD_REPO=(.+)') | default('', true ) | first | default(dashboard_repo, true) }}"
+      dashboard_version: "{{ event_settings.stdout | regex_findall('DASHBOARD_VERSION=(.+)') | default('', true ) | first | default(dashboard_version, true) }}"
+      dashboard_image: "{{ event_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | default('', true ) | first | default(dashboard_image, true) }}"
+      dashboard_variant: "{{ event_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | default('', true ) | first | default(dashboard_variant, true) }}"
+      terminal_image: "{{ event_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | default('', true ) | first | default(terminal_image, true) }}"
+      console_image: "{{ event_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
+      resource_budget: "{{ event_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | default('', true ) | first | default(resource_budget, true) }}"
+      max_session: "{{ event_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | default('', true ) | first | default(max_session, true) }}"
+      server_limit: "{{ event_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | default('', true ) | first | default(server_limit, true) }}"
+      idle_timeout: "{{ event_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
+      lets_encrypt: "{{ event_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | default('', true ) | first | default(lets_encrypt, true) }}"
+
+  when: event is defined and event|trim != ""
 
 - name: Show variables to use for workshop
   debug:
     msg: 
-      - "workshop_name = {{workshop_name}}"
+      - "workshop_name = {{ workshop_name }}"
       - "workshop_image =  {{ workshop_image }}"
-      - "workshop_description = {{workshop_description}}"
-      - "spawner_repo = {{spawner_repo}}"
+      - "workshop_description = {{ workshop_description }}"
+      - "spawner_repo = {{ spawner_repo }}"
       - "spawner_version =  {{ spawner_version }}"
       - "spawner_mode = {{ spawner_mode }}"
       - "spawner_image = {{ spawner_image }}"
@@ -112,7 +153,8 @@
       - "dashboard_variant = {{dashboard_variant }}"
       - "terminal_image = {{ terminal_image }}"
       - "console_image = {{ console_image }}"
-      - "resource_budget = {{resource_budget }}"
-      - "max_session = {{max_session }}"
-      - "idle_timeout = {{idle_timeout }}"
-      - "lets_encrypt = {{lets_encrypt }}"
+      - "resource_budget = {{ resource_budget }}"
+      - "max_session = {{ max_session }}"
+      - "idle_timeout = {{ idle_timeout }}"
+      - "server_limit = {{ server_limit }}"
+      - "lets_encrypt = {{ lets_encrypt }}"

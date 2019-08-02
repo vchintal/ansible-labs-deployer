@@ -32,6 +32,7 @@ Role Variables
 |`lab_resource_budget`    | medium | T-Shirt size (small, medium, large, x-large, xx-large) for the resources to be allocated to the workshop's pods |
 |`lab_max_session`        | 14400 | Maximum time (in seconds) a session can live. After this time it will be deleted no matter what |
 |`lab_idle_timeout`       | 1800 | Maximum time (in seconds) a session can be idled |
+|`lab_server_limit`       | | Number of maximum sessions per node |
 |`lab_lets_encrypt`       | false | Does the workshop require a secured route via Let's Encrypt |
 |`lab_console_image`      | | Image of the OpenShift console to use in the workshop (fully quialified)|
 |`lab_workshop_envvars`   |  | Additional environment variables to be provided to the workshop |
@@ -98,6 +99,25 @@ dependencies:
       lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
       lab_workshop_description: "Automate applications with k8s operators"
 ```
+
+## More examples
+
+Here are some other examples with alernate configuratiosn:
+
+```yaml
+- name: Event specific configuration
+  hosts: localhost
+  connection: local
+  tasks:
+  - import_role:
+      name: homeroom_labs_deployer
+    vars:
+      lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
+      lab_branch: "rhte19"
+      event: "rhte19"
+      lab_workshop_description: "Automate applications with k8s operators"
+```
+
 
 ## OpenShift Version Compatibility
 

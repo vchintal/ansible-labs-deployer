@@ -7,6 +7,7 @@ required_vars:
 # Lab Git coordinates
 lab_repo: ""
 lab_branch: "master"
+event: ""
 
 # Install homeroom
 install_homeroom: true

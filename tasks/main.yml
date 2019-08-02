@@ -45,6 +45,7 @@
     lab_resource_budget: "{{ lab_resource_budget | default(resource_budget, true) }}"
     lab_max_session: "{{ lab_max_session | default(max_session, true) }}"
     lab_idle_timeout: "{{ lab_idle_timeout | default(idle_timeout, true) }}"
+    lab_server_limit: "{{ lab_server_limit | default(server_limit, true) }}"
     lab_lets_encrypt: "{{ lab_lets_encrypt | default(lets_encrypt, true) }}"
 
 - name: Assign lab variables to use (envvars)
@@ -143,7 +144,7 @@
 
 - name: Creating spawner application
   set_fact:
-    lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ max_session }}\""
+    lab_additional_args: "--param RESOURCE_BUDGET=\"{{ lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ lab_max_session }}\" --param SERVER_LIMIT=\"{{ lab_server_limit }}\""
   when: spawner_mode == 'learning-portal'
 
 - name: Creating spawner application
