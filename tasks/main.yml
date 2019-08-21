@@ -33,6 +33,8 @@
     internal_lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
     internal_lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
     internal_lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
+    internal_lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
+    internal_lab_download_url: "{{ lab_download_url | default(download_url, true) }}"
     homeroom_app_name: "{{ homeroom_app_name | default(default_homeroom_app_name, true) }}"
 
 - name: Assign lab variables to use (spawner)
@@ -42,6 +44,8 @@
     internal_lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
     internal_lab_spawner_mode: "{{ lab_spawner_mode | default(spawner_mode, true) }}"
     internal_lab_spawner_variant: "{{ lab_spawner_variant | default(spawner_variant, true) }}"
+    internal_lab_spawner_role: "{{ lab_spawner_role | default(spawner_role, true) }}"
+    internal_lab_spawner_password: "{{ lab_spawner_password | default(spawner_password, true) }}"
 
 - name: Assign lab variables to use (dashboard)
   set_fact:
@@ -61,6 +65,7 @@
     internal_lab_idle_timeout: "{{ lab_idle_timeout | default(idle_timeout, true) }}"
     internal_lab_server_limit: "{{ lab_server_limit | default(server_limit, true) }}"
     internal_lab_lets_encrypt: "{{ lab_lets_encrypt | default(lets_encrypt, true) }}"
+    internal_lab_workshop_memory: "{{ lab_workshop_memory | default(workshop_memory, true) }}"
 
 - name: Assign lab variables to use (envvars)
   set_fact:
@@ -119,7 +124,8 @@
 
       - name: Is homeroom installed
         set_fact:
-          __homeroom_installed: "{{ __homeroom_dc.resources[0].status.replicas == 1 }}"
+          __homeroom_installed: "{{ __homeroom_dc.resources[0].status.replicas == 1 | default(false) | bool }}"
+        when: __homeroom_dc.resources is defined and (__homeroom_dc.resources|length>0)
       
       - debug:
           var: __homeroom_installed
@@ -180,7 +186,7 @@
 
   - name: Creating spawner application
     set_fact:
-      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ internal_lab_max_session }}\" --param SERVER_LIMIT=\"{{ internal_lab_server_limit }}\" --param WORKSHOP_FILE=\"{{ internal_lab_workshop_file }}\""
+      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ internal_lab_max_session }}\" --param SERVER_LIMIT=\"{{ internal_lab_server_limit }}\" --param WORKSHOP_FILE=\"{{ internal_lab_workshop_file }}\" --param SPAWNER_ROLE=\"{{ internal_lab_spawner_role }}\" --param SPAWNER_PASSWORD=\"{{ internal_lab_spawner_password }}\" "
     when: spawner_mode == 'learning-portal'
 
   - name: Creating spawner application
@@ -211,6 +217,9 @@
       oc process -f {{ __spawner_template_path }} \
       --param PROJECT_NAME="{{ project_name }}" \
       --param APPLICATION_NAME="{{ internal_lab_workshop_app_name }}" \
+      --param WORKSHOP_FILE="{{ internal_lab_workshop_file }}" \
+      --param WORKSHOP_MEMORY="{{ internal_lab_workshop_memory }}" \
+      --param DOWNLOAD_URL="{{ internal_lab_download_url }}" \
       --param GATEWAY_ENVVARS="{{ internal_lab_gateway_envvars }}" \
       --param TERMINAL_ENVVARS="{{ internal_lab_terminal_envvars }}" \
       --param WORKSHOP_ENVVARS="{{ internal_lab_workshop_envvars }}" \

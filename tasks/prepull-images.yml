@@ -50,4 +50,4 @@
     namespace: "{{ project_name }}"
 
 - name: Wait for images to be prepulled
-  command: oc rollout status daemonset/prepull-{{ internal_lab_workshop_app_name }} -n {{ project_name }}
+  command: oc rollout status daemonset/{{ __daemonset_app_name }} -n {{ project_name }}

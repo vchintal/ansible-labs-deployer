@@ -1,14 +1,18 @@
----
 - hosts: localhost
   connection: local
   vars:
-    project_name: "all-workshops"
-  
+    project_name: "labs"
+
   tasks:
   - include_role:
       name: ../../ansible-labs-deployer
     vars:
-      lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
+      lab_repo: "https://github.com/openshift-labs/lab-developing-with-odo"
+
+  - include_role:
+      name: ../../ansible-labs-deployer
+    vars:
+      lab_repo: "https://github.com/openshift-labs/lab-openshift-pipelines-with-tekton"
 
   - include_role:
       name: ../../ansible-labs-deployer
@@ -22,9 +26,9 @@
   - include_role:
       name: ../../ansible-labs-deployer
     vars:
-      lab_repo: "https://github.com/openshift-homeroom/lab-asciidoc-sample"
+      lab_repo: "https://github.com/openshift-homeroom/lab-workshop-content"
 
   - include_role:
       name: ../../ansible-labs-deployer
     vars:
-      lab_repo: "https://github.com/openshift-homeroom/lab-markdown-sample"
+      lab_repo: "https://github.com/openshift-labs/lab-k8s-fundamentals"

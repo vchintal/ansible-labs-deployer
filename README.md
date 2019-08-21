@@ -36,6 +36,12 @@ Role Variables
 |`lab_idle_timeout`       | 1800 | Maximum time (in seconds) a session can be idled |
 |`lab_server_limit`       | | Number of maximum sessions per node |
 |`lab_lets_encrypt`       | false | Does the workshop require a secured route via Let's Encrypt |
+|`settings`               | | xxx |
+|`lab_workshop_file`      | | xxx |
+|`lab_workshop_memory`    | | xxx |
+|`lab_spawner_role`       | | xxx |
+|`lab_spawner_password`   | | xxx |
+|`lab_download_url`       | | xxx |
 |`lab_console_image`      | | Image of the OpenShift console to use in the workshop (fully quialified)|
 |`lab_workshop_envvars`   |  | Additional environment variables to be provided to the workshop |
 |`lab_terminal_envvars`   |  | Additional environment variables to be provided to the terminal |
