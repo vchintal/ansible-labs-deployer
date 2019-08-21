@@ -48,7 +48,7 @@ Role Variables
 |`lab_gateway_envvars`    |  | Additional environment variables to be provided to the gateway |
 |`lab_jupyterhub_config`  |  | Additional configuration to be provided to the spawner |
 
-## Running an example
+## Running an example
 
 Install the role:
 
@@ -77,7 +77,7 @@ And execute it:
 ansible-playbook my-playbook.yml
 ```
 
-### Use a requirements file
+### Use a requirements file
 
 Create a requirements file (requirements.yml) to install the role:
 
@@ -93,7 +93,7 @@ Install the role:
 ansible-galaxy install -r requirements.yml -f
 ```
 
-## Use meta/main.yaml
+## Use meta/main.yaml
 
 _NOTE_: this is kind of a hack to use this within a role
 
@@ -128,7 +128,7 @@ Here are some other examples with alernate configuratiosn:
 ```
 
 
-## OpenShift Version Compatibility
+## OpenShift Version Compatibility
 
 When listing this role, make sure to pin the version of the role via one of the tags:
 

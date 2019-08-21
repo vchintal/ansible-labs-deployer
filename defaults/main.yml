@@ -9,13 +9,13 @@ lab_repo: ""
 lab_branch: "master"
 settings: ""
 
-# Install homeroom
+# Install homeroom
 install_homeroom: true
 
 #
 # DEFAULTS (Variables used in playbook are same but replacing default_ with lab_)
 #
-# Name of the generated project in OpenShift
+# Name of the generated project in OpenShift
 default_project_name: "openshift-homeroom"
 default_homeroom_app_name: "homeroom"
 default_workshop_file: "workshop.yaml"
@@ -27,7 +27,7 @@ default_gateway_envvars: ""
 default_jupyterhub_config: ""
 
 #
-# For homeroom
+# For homeroom
 #
 homeroom_image: "quay.io/openshifthomeroom/workshop-homeroom:2.0.0"
 homeroom_version: "2.0.0"

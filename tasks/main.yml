@@ -17,8 +17,8 @@
     dest: "{{ tmp_dir.path }}/kube-config"
     remote_src: yes
 
-# TODO: 
-# - Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume you're logged in
+# TODO: 
+# - Verify that we're logged into the correct cluster. As it uses oc and k8s tasks that assume you're logged in
 
 # Inputs to this task:
 #  - lab_repo
@@ -27,49 +27,48 @@
 
 - name: Assign lab variables to use (workshop)
   set_fact:
-    project_name: "{{ project_name | default(default_project_name, true) }}"
-    internal_lab_workshop_app_name: "{{ lab_workshop_app_name | default(workshop_app_name, true) }}"
-    internal_lab_workshop_name: "{{ lab_workshop_name | default(workshop_name, true) }}"
-    internal_lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
-    internal_lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
-    internal_lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
-    internal_lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
-    internal_lab_download_url: "{{ lab_download_url | default(download_url, true) }}"
-    homeroom_app_name: "{{ homeroom_app_name | default(default_homeroom_app_name, true) }}"
+    project_name: "{{ project_name | default(default_project_name, true) }}"
+    internal_lab_workshop_app_name: "{{ lab_workshop_app_name | default(workshop_app_name, true) }}"
+    internal_lab_workshop_name: "{{ lab_workshop_name | default(workshop_name, true) }}"
+    internal_lab_workshop_description: "{{ lab_workshop_description | default(workshop_description, true) }}"
+    internal_lab_workshop_file: "{{ lab_workshop_file | default(workshop_file, true) }}"
+    internal_lab_workshop_image: "{{ lab_workshop_image | default(workshop_image, true) }}"
+    internal_lab_download_url: "{{ lab_download_url | default(download_url, true) }}"
+    homeroom_app_name: "{{ homeroom_app_name | default(default_homeroom_app_name, true) }}"
 
 - name: Assign lab variables to use (spawner)
   set_fact:
-    internal_lab_spawner_repo: "{{ lab_spawner_repo | default(spawner_repo, true) }}"
-    internal_lab_spawner_version: "{{ lab_spawner_version | default(spawner_version, true) }}"
-    internal_lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
-    internal_lab_spawner_mode: "{{ lab_spawner_mode | default(spawner_mode, true) }}"
-    internal_lab_spawner_variant: "{{ lab_spawner_variant | default(spawner_variant, true) }}"
-    internal_lab_spawner_role: "{{ lab_spawner_role | default(spawner_role, true) }}"
-    internal_lab_spawner_password: "{{ lab_spawner_password | default(spawner_password, true) }}"
+    internal_lab_spawner_repo: "{{ lab_spawner_repo | default(spawner_repo, true) }}"
+    internal_lab_spawner_version: "{{ lab_spawner_version | default(spawner_version, true) }}"
+    internal_lab_spawner_image: "{{ lab_spawner_image | default(spawner_image, true) }}"
+    internal_lab_spawner_mode: "{{ lab_spawner_mode | default(spawner_mode, true) }}"
+    internal_lab_spawner_variant: "{{ lab_spawner_variant | default(spawner_variant, true) }}"
+    internal_lab_spawner_role: "{{ lab_spawner_role | default(spawner_role, true) }}"
+    internal_lab_spawner_password: "{{ lab_spawner_password | default(spawner_password, true) }}"
 
 - name: Assign lab variables to use (dashboard)
   set_fact:
-    internal_lab_dashboard_repo: "{{ lab_dashboard_repo | default(dashboard_repo, true) }}"
-    internal_lab_dashboard_version: "{{ lab_dashboard_version | default(dashboard_version, true) }}"
-    internal_lab_dashboard_image: "{{ lab_dashboard_image | default(dashboard_image, true) }}"
-    internal_lab_dashboard_variant: "{{ lab_dashboard_variant | default(dashboard_variant, true) }}"
+    internal_lab_dashboard_repo: "{{ lab_dashboard_repo | default(dashboard_repo, true) }}"
+    internal_lab_dashboard_version: "{{ lab_dashboard_version | default(dashboard_version, true) }}"
+    internal_lab_dashboard_image: "{{ lab_dashboard_image | default(dashboard_image, true) }}"
+    internal_lab_dashboard_variant: "{{ lab_dashboard_variant | default(dashboard_variant, true) }}"
 
 - name: Assign lab variables to use (terminal)
   set_fact:
-    internal_lab_terminal_image: "{{ lab_terminal_image | default(terminal_image, true) }}"
+    internal_lab_terminal_image: "{{ lab_terminal_image | default(terminal_image, true) }}"
 
 - name: Assign lab variables to use (workshop additional vars)
   set_fact:
-    internal_lab_resource_budget: "{{ lab_resource_budget | default(resource_budget, true) }}"
-    internal_lab_max_session: "{{ lab_max_session | default(max_session, true) }}"
-    internal_lab_idle_timeout: "{{ lab_idle_timeout | default(idle_timeout, true) }}"
-    internal_lab_server_limit: "{{ lab_server_limit | default(server_limit, true) }}"
-    internal_lab_lets_encrypt: "{{ lab_lets_encrypt | default(lets_encrypt, true) }}"
-    internal_lab_workshop_memory: "{{ lab_workshop_memory | default(workshop_memory, true) }}"
+    internal_lab_resource_budget: "{{ lab_resource_budget | default(resource_budget, true) }}"
+    internal_lab_max_session: "{{ lab_max_session | default(max_session, true) }}"
+    internal_lab_idle_timeout: "{{ lab_idle_timeout | default(idle_timeout, true) }}"
+    internal_lab_server_limit: "{{ lab_server_limit | default(server_limit, true) }}"
+    internal_lab_lets_encrypt: "{{ lab_lets_encrypt | default(lets_encrypt, true) }}"
+    internal_lab_workshop_memory: "{{ lab_workshop_memory | default(workshop_memory, true) }}"
 
 - name: Assign lab variables to use (envvars)
   set_fact:
-    internal_lab_console_image: "{{ lab_console_image | default(console_image, true) }}"
+    internal_lab_console_image: "{{ lab_console_image | default(console_image, true) }}"
     internal_lab_workshop_envvars: "{{ default_workshop_envvars }}"
     internal_lab_terminal_envvars: "{{ default_terminal_envvars }}"
     internal_lab_gateway_envvars: "{{ default_gateway_envvars }}"
@@ -96,9 +95,9 @@
     KUBECONFIG: "{{ tmp_dir.path }}/kube-config"
     K8S_AUTH_KUBECONFIG: "{{ tmp_dir.path }}/kube-config"
   block:
-  - name: Make sure target project {{ project_name }} exists. If not, create it.
+  - name: Make sure target project {{ project_name }} exists. If not, create it.
     k8s:
-      name: "{{ project_name }}"
+      name: "{{ project_name }}"
       api_version: project.openshift.io/v1
       kind: Project
       state: present
@@ -106,11 +105,11 @@
   # Inputs to this task:
   #  - images_to_prepull
   #  - project_name
-  #  - internal_lab_workshop_app_name
-  # Outputs of this task:
+  #  - internal_lab_workshop_app_name
+  # Outputs of this task:
   - include_tasks: prepull-images.yml
     when: 'images_to_prepull is defined'
-  # TODO: If possible, check if there are images to prepull and list is not empty
+  # TODO: If possible, check if there are images to prepull and list is not empty
 
   - name: Deploy homeroom
     block:
@@ -186,31 +185,31 @@
 
   - name: Creating spawner application
     set_fact:
-      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ internal_lab_max_session }}\" --param SERVER_LIMIT=\"{{ internal_lab_server_limit }}\" --param WORKSHOP_FILE=\"{{ internal_lab_workshop_file }}\" --param SPAWNER_ROLE=\"{{ internal_lab_spawner_role }}\" --param SPAWNER_PASSWORD=\"{{ internal_lab_spawner_password }}\" "
+      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\" --param MAX_SESSION_AGE=\"{{ internal_lab_max_session }}\" --param SERVER_LIMIT=\"{{ internal_lab_server_limit }}\" --param SPAWNER_ROLE=\"{{ internal_lab_spawner_role }}\" --param SPAWNER_PASSWORD=\"{{ internal_lab_spawner_password }}\" "
     when: spawner_mode == 'learning-portal'
 
   - name: Creating spawner application
     set_fact:
-      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
+      internal_lab_additional_args: "--param RESOURCE_BUDGET=\"{{ internal_lab_resource_budget }}\" --param HOMEROOM_LINK=\"{{ __homeroom_route_url }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
     when: spawner_mode == 'user-workspace'
 
   - name: Creating spawner application
     set_fact:
       internal_lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ internal_lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
     when: spawner_mode == 'hosted-workshop'
-  # TODO: This mode does not work with homeroom
+  # TODO: This mode does not work with homeroom
 
   - name: Creating spawner application
     set_fact:
       internal_lab_additional_args: "--param CLUSTER_SUBDOMAIN=\"{{ internal_lab_cluster_subdomain }}\" --param CONSOLE_IMAGE=\"{{ internal_lab_console_image }}\""
     when: spawner_mode == 'terminal-server'
-  # TODO: This mode does not work with homeroom
+  # TODO: This mode does not work with homeroom
 
   - name: Creating spawner application
     set_fact:
       internal_lab_additional_args: ""
     when: spawner_mode == 'jumpbox-server'
-  # TODO: This mode does not work with homeroom
+  # TODO: This mode does not work with homeroom
 
   - name: Create workshop resources
     shell: >

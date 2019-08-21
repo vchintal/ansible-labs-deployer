@@ -2,8 +2,8 @@
 # Inputs to this task:
 #  - images_to_prepull
 #  - project_name
-#  - lab_workshop_app_name
-# Outputs of this task:
+#  - lab_workshop_app_name
+# Outputs of this task:
 
 - name: Show contents of var images_to_prepull
   debug:
