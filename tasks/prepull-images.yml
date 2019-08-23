@@ -2,12 +2,29 @@
 # Inputs to this task:
 #  - images_to_prepull
 #  - project_name
-#  - lab_workshop_app_name
+#  - workshop_app_name
 # Outputs of this task:
+
+- name: Assign lab variables to use (images_to_prepull)
+  set_fact:
+    images_to_prepull:
+      - image: "{{ homeroom_image }}"
+        name: "homeroom"
+      - image: "{{ dashboard_image }}"
+        name: "dashboard"
+      - image: "{{ spawner_image }}"
+        name: "spawner"
+      - image: "{{ terminal_image }}"
+        name: "terminal"
+      - image: "{{ console_image }}"
+        name: "console"
+      - image: "{{ workshop_image }}"
+        name: "workshop"
 
 - name: Show contents of var images_to_prepull
   debug:
     var: images_to_prepull
+    verbosity: 1
 
 - name: "Create temporary working directory to use as work_dir"
   tempfile:
@@ -18,12 +35,7 @@
 - name: Set internal variables to use in task
   set_fact:
     __work_dir: "{{ __work_dir.path }}"
-    __daemonset_app_name: "{{ internal_lab_workshop_app_name }}-{{ project_name }}"
-
-- name: Process prepull template
-  template:
-    src: "{{ role_path }}/templates/prepull.yaml.j2"
-    dest: "{{ __work_dir }}/prepull.yaml"
+    __daemonset_app_name: "{{ workshop_app_name }}-{{ project_name }}"
 
 - name: Check for nodeselector compute
   command: oc get nodes -l node-role.kubernetes.io/compute -o jsonpath='{ .items[*].metadata.name }'
@@ -35,13 +47,23 @@
 
 - name: Nodeselector for 3.x
   set_fact:
-    __nodeselector: "node-role.kubernetes.io/compute: 'true'"
+    nodeselector: "node-role.kubernetes.io/compute: 'true'"
   when: __compute_nodes.stdout != ''
 
 - name: Nodeselector for 4.x
   set_fact:
-    __nodeselector: "node-role.kubernetes.io/worker:"
+    nodeselector: "node-role.kubernetes.io/worker:"
   when: __worker_nodes.stdout != ''
+
+- name: Process prepull template into {{ __work_dir }}/prepull.yaml
+  template:
+    src: "{{ role_path }}/templates/prepull.yaml.j2"
+    dest: "{{ __work_dir }}/prepull.yaml"
+  vars:
+    PREPULL_daemonset_app_name: "{{ __daemonset_app_name }}"
+    PREPULL_nodeselector: "{{ nodeselector }}"
+    PREPULL_project_name: "{{ project_name }}"
+    PREPULL_images_to_prepull: "{{ images_to_prepull }}"
 
 - name: Create DaemonSet to Prepull images (targeting worker/compute nodes if defined, else all)
   k8s:

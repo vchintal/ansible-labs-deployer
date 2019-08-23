@@ -3,9 +3,10 @@
   connection: local
   vars:
     lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
-    lab_branch: "rhte19"
-    event: "rhte19"
-    project_name: "new-labs-9"
+#    lab_branch: "rhte19"
+    settings: "rhte19"
+    workshop_app_name: "lab-build-an-operator"
+#    project_name: "new-labs-9"
 #    install_homeroom: false
 
   roles:

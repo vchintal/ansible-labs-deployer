@@ -2,21 +2,21 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: {{ __daemonset_app_name }}
-  name: {{ __daemonset_app_name }}
-  namespace: {{ project_name }}
+    app: {{ PREPULL_daemonset_app_name }}
+  name: {{ PREPULL_daemonset_app_name }}
+  namespace: {{ PREPULL_project_name }}
 spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: {{ __daemonset_app_name }}
+      app: {{ PREPULL_daemonset_app_name }}
   template:
     metadata:
       labels:
-        app: {{ __daemonset_app_name }}
+        app: {{ PREPULL_daemonset_app_name }}
     spec:
       nodeSelector:
-        {{ __nodeselector }}
+        {{ PREPULL_nodeselector }}
       containers:
         - image: gcr.io/google_containers/pause
           imagePullPolicy: Always
@@ -25,17 +25,19 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
       dnsPolicy: ClusterFirst
-{% if images_to_prepull %}
+{% if PREPULL_images_to_prepull %}
       initContainers:
-{% for _image in images_to_prepull %}
+{% for INTERNAL_image in PREPULL_images_to_prepull %}
+{% if INTERNAL_image.image != "" %}
         - command:
             - /bin/true
-          image: '{{ _image.image }}'
+          image: '{{ INTERNAL_image.image }}'
           imagePullPolicy: IfNotPresent
-          name: prepull-{{ _image.name }}
+          name: prepull-{{ INTERNAL_image.name }}
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+{% endif %}
 {% endfor %}
 {% endif %}
       restartPolicy: Always

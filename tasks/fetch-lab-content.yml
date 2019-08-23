@@ -3,8 +3,7 @@
 #  - lab_repo
 #  - lab_branch
 # Outputs of this task:
-#  - lab_workshop_name
-#  - _lab_local_dir
+#  - lab_local_dir
 
 - name: "Create temporary working directory to use as work_dir"
   tempfile:
@@ -12,143 +11,118 @@
     path: "{{ tmp_dir.path }}"
   register: __work_dir
 
-- name: Set temporary directory for checkout into a variable {{ __work_dir.path }}
+- name: "Set temporary directory for checkout into a variable {{ __work_dir.path }}"
   set_fact:
-    _lab_local_dir: "{{ __work_dir.path }}"
+    lab_local_dir: "{{ __work_dir.path }}"
 
-- name: Clone lab repository (with submodules) into work_dir.
+- name: "Clone lab repository (with submodules) into {{ lab_local_dir }}"
   git:
     repo: "{{ lab_repo }}"
     version: "{{ lab_branch }}"
-    dest: "{{ _lab_local_dir }}"
+    dest: "{{  lab_local_dir }}"
     track_submodules: yes
-  register: __git_repo
-
-#- name: Get git details
-#  shell: "basename -s .git `git config --get remote.origin.url`"
-#  args:
-#    chdir: "{{ _lab_local_dir }}"
-#  register: __git_repo_name
-#
-#- name: Set git repository name into a variable
-#  set_fact:
-#    _lab_name: "{{ __git_repo_name.stdout }}"
-# TODO: Make sure all _ are replaced with -
-#
-#- name: Show fetch lab content info
-#  debug:
-#    msg: "Local copy of {{ lab_workshop_name }} located in {{ _lab_local_dir }}"
 
 - name: Read file for default settings
-  command: cat {{_lab_local_dir}}/.workshop/scripts/default-settings.sh
+  command: cat {{lab_local_dir}}/.workshop/scripts/default-settings.sh
   register: default_settings
 
 - name: Show file .workshop/scripts/default-settings.sh contents
   debug:
     var: default_settings
+    verbosity: 1
 
 - name: Process vars in default settings
   set_fact:
-    spawner_repo: "{{ default_settings.stdout | regex_findall('SPAWNER_REPO=(.+)') | first}}"
-    spawner_version: "{{ default_settings.stdout | regex_findall('SPAWNER_VERSION=(.+)') | first}}"
-    spawner_mode: "{{ default_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default(' ', true )  | first | trim}}"
-    spawner_image: "{{ default_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | first}}"
-    spawner_variant: "{{ default_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | first}}"
-    spawner_role: "{{ default_settings.stdout | regex_findall('SPAWNER_ROLE=(.+)') | first}}"
-    spawner_password: "{{ default_settings.stdout | regex_findall('SPAWNER_PASSWORD=(.+)') | default(' ', true )  | first | trim}}"
-    dashboard_repo: "{{ default_settings.stdout | regex_findall('DASHBOARD_REPO=(.+)') | first}}"
-    dashboard_version: "{{ default_settings.stdout | regex_findall('DASHBOARD_VERSION=(.+)') | first}}"
-    dashboard_image: "{{ default_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | first}}"
-    dashboard_variant: "{{ default_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | first}}"
-    terminal_image: "{{ default_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | first}}"
-    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | first}}"
-    resource_budget: "{{ default_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | first}}"
-    max_session: "{{ default_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | first}}"
-    server_limit: "{{ default_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | first}}"
-    idle_timeout: "{{ default_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | first}}"
-    lets_encrypt: "{{ default_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | first}}"
-    workshop_memory: "{{ default_settings.stdout | regex_findall('WORKSHOP_MEMORY=(.+)') | first}}"
-    workshop_file: "{{ default_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default(' ', true )  | first | trim}}"
-    download_url: "{{ default_settings.stdout | regex_findall('DOWNLOAD_URL=(.+)') | default(' ', true )  | first | trim}}"
+    terminal_image: "{{ default_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | first }}"
+    dashboard_image: "{{ default_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | first }}"
+    spawner_image: "{{ default_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | first }}"
+    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | first }}"
+#    workshop_image: "{{ default_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | first}}"
+#    workshop_app_name: "{{ default_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | first}} "
+    workshop_file: "workshop.yaml"
+
+- name: Show variables to use for workshop
+  debug:
+    msg: 
+      - "terminal_image = {{ terminal_image }}"
+      - "dashboard_image =  {{ dashboard_image }}"
+      - "spawner_image =  {{ spawner_image }}"
+      - "console_image =  {{ console_image }}"
+      - "workshop_file =  {{ workshop_file }}"
+    verbosity: 1
 
 - name: Read file for workshop settings
-  command: cat {{_lab_local_dir}}/.workshop/settings.sh
+  command: cat {{lab_local_dir}}/.workshop/settings.sh
   register: workshop_settings
 
 - name: Show file .workshop/settings.sh contents
   debug:
     var: workshop_settings
+    verbosity: 1
 
 - name: Override vars with workshop specific settings (REQUIRED)
   set_fact:
-    workshop_app_name: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | first }}"
-    workshop_image: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | first }}"
-    workshop_file: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default('', true ) | first | default(default_workshop_file, true) }}"
-    spawner_mode: "{{ workshop_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
+    terminal_image: "{{ workshop_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | default('', true ) | first | default(terminal_image, true) }}"
+    dashboard_image: "{{ workshop_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | default('', true ) | first | default(dashboard_image, true) }}"
     spawner_image: "{{ workshop_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
-    spawner_variant: "{{ workshop_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
-    spawner_role: "{{ workshop_settings.stdout | regex_findall('SPAWNER_ROLE=(.+)') | default('', true ) | first | default(spawner_role, true) }}"
-    spawner_password: "{{ workshop_settings.stdout | regex_findall('SPAWNER_PASSWORD=(.+)') | default('', true ) | first | default(spawner_password, true) }}"
-    dashboard_repo: "{{ workshop_settings.stdout | regex_findall('DASHBOARD_REPO=(.+)') | default('', true ) | first | default(dashboard_repo, true) }}"
-    dashboard_version: "{{ default_settings.stdout | regex_findall('DASHBOARD_VERSION=(.+)') | default('', true ) | first | default(dashboard_version, true) }}"
-    dashboard_image: "{{ default_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | default('', true ) | first | default(dashboard_image, true) }}"
-    dashboard_variant: "{{ workshop_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | default('', true ) | first | default(dashboard_variant, true) }}"
-    terminal_image: "{{ default_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | default('', true ) | first | default(terminal_image, true) }}"
-    console_image: "{{ default_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
-    resource_budget: "{{ workshop_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | default('', true ) | first | default(resource_budget, true) }}"
-    max_session: "{{ workshop_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | default('', true ) | first | default(max_session, true) }}"
-    server_limit: "{{ workshop_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | default('', true ) | first | default(server_limit, true) }}"
-    idle_timeout: "{{ workshop_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
-    lets_encrypt: "{{ workshop_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | default('', true ) | first | default(lets_encrypt, true) }}"
-    workshop_memory: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_MEMORY=(.+)') | default('', true ) | first | default(workshop_memory, true) }}"
+    console_image: "{{ workshop_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
+    workshop_image: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | default('', true ) | first | default(workshop_image, true) }}"
+    workshop_app_name: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | default('', true ) | first | default(workshop_app_name, true) }}"
     workshop_file: "{{ workshop_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default('', true ) | first | default(workshop_file, true) }}"
-    download_url: "{{ workshop_settings.stdout | regex_findall('DOWNLOAD_URL=(.+)') | default('', true ) | first | default(download_url, true) }}"
 
-- name: Check for settings variable
+- name: Show variables to use for workshop
   debug:
-    var: settings
+    msg: 
+      - "terminal_image = {{ terminal_image }}"
+      - "dashboard_image =  {{ dashboard_image }}"
+      - "spawner_image =  {{ spawner_image }}"
+      - "console_image =  {{ console_image }}"
+      - "workshop_image =  {{ workshop_image }}"
+      - "workshop_file =  {{ workshop_file }}"
+      - "workshop_app_name =  {{ workshop_app_name }}"
+    verbosity: 1
+
+- name: Verify settings file exists
+  stat: 
+    path: "{{lab_local_dir}}/.workshop/{{ settings }}-settings.sh"
+  register: settins_settings_exists
+  when: settings is defined and settings|trim != ""
 
 - name: Read settings specific configuration if settings is defined
   block:
   - name: Read file for settings specific settings
-    command: cat {{_lab_local_dir}}/.workshop/{{ settings }}-settings.sh
+    command: cat {{lab_local_dir}}/.workshop/{{ settings }}-settings.sh
     register: settings_settings
   - name: Show file .workshop/{{ settings }}-settings.sh contents
     debug:
       var: settings_settings
+      verbosity: 1
   - name: Override vars with settings specific settings (REQUIRED)
     set_fact:
-      workshop_app_name: "{{ settings_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | default('', true ) | first | default(workshop_app_name, true)}}"
-      workshop_image: "{{ settings_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | default('', true ) | first | default(workshop_image, true)}}"
-      workshop_file: "{{ settings_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default('', true ) | first | default(workshop_file, true) }}"
-      spawner_mode: "{{ settings_settings.stdout | regex_findall('SPAWNER_MODE=(.+)') | default('', true ) | first | default(spawner_mode, true) }}"
-      spawner_image: "{{ settings_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
-      spawner_variant: "{{ settings_settings.stdout | regex_findall('SPAWNER_VARIANT=(.+)') | default('', true ) | first | default(spawner_variant, true) }}"
-      spawner_role: "{{ settings_settings.stdout | regex_findall('SPAWNER_ROLE=(.+)') | default('', true ) | first | default(spawner_role, true) }}"
-      spawner_password: "{{ settings_settings.stdout | regex_findall('SPAWNER_PASSWORD=(.+)') | default('', true ) | first | default(spawner_password, true) }}"
-      dashboard_repo: "{{ settings_settings.stdout | regex_findall('DASHBOARD_REPO=(.+)') | default('', true ) | first | default(dashboard_repo, true) }}"
-      dashboard_version: "{{ settings_settings.stdout | regex_findall('DASHBOARD_VERSION=(.+)') | default('', true ) | first | default(dashboard_version, true) }}"
-      dashboard_image: "{{ settings_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | default('', true ) | first | default(dashboard_image, true) }}"
-      dashboard_variant: "{{ settings_settings.stdout | regex_findall('DASHBOARD_VARIANT=(.+)') | default('', true ) | first | default(dashboard_variant, true) }}"
       terminal_image: "{{ settings_settings.stdout | regex_findall('TERMINAL_IMAGE=(.+)') | default('', true ) | first | default(terminal_image, true) }}"
+      dashboard_image: "{{ settings_settings.stdout | regex_findall('DASHBOARD_IMAGE=(.+)') | default('', true ) | first | default(dashboard_image, true) }}"
+      spawner_image: "{{ settings_settings.stdout | regex_findall('SPAWNER_IMAGE=(.+)') | default('', true ) | first | default(spawner_image, true) }}"
       console_image: "{{ settings_settings.stdout | regex_findall('CONSOLE_IMAGE=(.+)') | default('', true ) | first | default(console_image, true) }}"
-      resource_budget: "{{ settings_settings.stdout | regex_findall('RESOURCE_BUDGET=(.+)') | default('', true ) | first | default(resource_budget, true) }}"
-      max_session: "{{ settings_settings.stdout | regex_findall('MAX_SESSION_AGE=(.+)') | default('', true ) | first | default(max_session, true) }}"
-      server_limit: "{{ settings_settings.stdout | regex_findall('SERVER_LIMIT=(.+)') | default('', true ) | first | default(server_limit, true) }}"
-      idle_timeout: "{{ settings_settings.stdout | regex_findall('IDLE_TIMEOUT=(.+)') | default('', true ) | first | default(idle_timeout, true) }}"
-      lets_encrypt: "{{ settings_settings.stdout | regex_findall('LETS_ENCRYPT=(.+)') | default('', true ) | first | default(lets_encrypt, true) }}"
-      workshop_memory: "{{ settings_settings.stdout | regex_findall('WORKSHOP_MEMORY=(.+)') | default('', true ) | first | default(workshop_memory, true) }}"
+      workshop_image: "{{ settings_settings.stdout | regex_findall('WORKSHOP_IMAGE=(.+)') | default('', true ) | first | default(workshop_image, true) }}"
+      workshop_app_name: "{{ settings_settings.stdout | regex_findall('WORKSHOP_NAME=(.+)') | default('', true ) | first | default(workshop_app_name, true) }}"
       workshop_file: "{{ settings_settings.stdout | regex_findall('WORKSHOP_FILE=(.+)') | default('', true ) | first | default(workshop_file, true) }}"
-      download_url: "{{ settings_settings.stdout | regex_findall('DOWNLOAD_URL=(.+)') | default('', true ) | first | default(download_url, true) }}"
-  when: settings is defined and settings|trim != ""
+  - name: Show variables to use for workshop
+    debug:
+      msg: 
+        - "terminal_image = {{ terminal_image }}"
+        - "dashboard_image =  {{ dashboard_image }}"
+        - "spawner_image =  {{ spawner_image }}"
+        - "console_image =  {{ console_image }}"
+        - "workshop_image =  {{ workshop_image }}"
+        - "workshop_file =  {{ workshop_file }}"
+        - "workshop_app_name =  {{ workshop_app_name }}"
+      verbosity: 1
+  when: settings is defined and settings|trim != "" and settins_settings_exists.stat.exists
 
-- name: Set default workshop_file
-  set_fact:
-    workshop_file: "{{ workshop_file | default('workshop.yaml',true) }}"
 
 - name: Read {{ workshop_file }} contents for additional workshop info
   include_vars:
-    file: "{{_lab_local_dir}}/workshop/{{ workshop_file }}"
+    file: "{{lab_local_dir}}/workshop/{{ workshop_file }}"
     name: workshop_vars
 
 - name: Get name and description of the workshop
@@ -159,29 +133,13 @@
 - name: Show variables to use for workshop
   debug:
     msg: 
-      - "workshop_app_name = {{ workshop_app_name }}"
+      - "terminal_image = {{ terminal_image }}"
+      - "dashboard_image =  {{ dashboard_image }}"
+      - "spawner_image =  {{ spawner_image }}"
+      - "console_image =  {{ console_image }}"
       - "workshop_image =  {{ workshop_image }}"
       - "workshop_file =  {{ workshop_file }}"
+      - "workshop_app_name =  {{ workshop_app_name }}"
       - "workshop_name = {{ workshop_name }}"
       - "workshop_description = {{ workshop_description }}"
-      - "spawner_repo = {{ spawner_repo }}"
-      - "spawner_version =  {{ spawner_version }}"
-      - "spawner_mode = {{ spawner_mode }}"
-      - "spawner_image = {{ spawner_image }}"
-      - "spawner_variant = {{ spawner_variant }}"
-      - "spawner_role = {{ spawner_role }}"
-      - "spawner_password = {{ spawner_password }}"
-      - "dashboard_repo = {{ dashboard_repo }}"
-      - "dashboard_version = {{dashboard_version }}"
-      - "dashboard_image = {{dashboard_image }}"
-      - "dashboard_variant = {{dashboard_variant }}"
-      - "terminal_image = {{ terminal_image }}"
-      - "console_image = {{ console_image }}"
-      - "resource_budget = {{ resource_budget }}"
-      - "max_session = {{ max_session }}"
-      - "idle_timeout = {{ idle_timeout }}"
-      - "server_limit = {{ server_limit }}"
-      - "lets_encrypt = {{ lets_encrypt }}"
-      - "workshop_memory = {{ workshop_memory }}"
-      - "workshop_file = {{ workshop_file }}"
-      - "download url = {{ download_url }}"
+    verbosity: 1

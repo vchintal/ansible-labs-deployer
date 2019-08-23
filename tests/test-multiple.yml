@@ -1,7 +1,7 @@
 - hosts: localhost
   connection: local
-  vars:
-    project_name: "labs"
+#  vars:
+#    project_name: "labs"
 
   tasks:
   - include_role:
@@ -18,10 +18,10 @@
       name: ../../ansible-labs-deployer
     vars:
       lab_repo: "https://github.com/openshift-labs/lab-build-an-operator"
-      lab_branch: "rhte19"
-      lab_workshop_app_name: "lab-build-an-operator-rhte"
-      lab_workshop_name: "Build an op (RHTE19)"
-      event: "rhte19"
+#      lab_branch: "rhte19"
+#      workshop_app_name: "lab-build-an-operator-rhte"
+#      workshop_name: "Build an op (RHTE19)"
+#      settings: "rhte19"
 
   - include_role:
       name: ../../ansible-labs-deployer
