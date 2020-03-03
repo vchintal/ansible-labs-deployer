@@ -142,4 +142,4 @@
       - "workshop_app_name =  {{ workshop_app_name }}"
       - "workshop_name = {{ workshop_name }}"
       - "workshop_description = {{ workshop_description }}"
-    verbosity: 1
+    verbosity: 0
