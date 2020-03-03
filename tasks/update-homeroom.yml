@@ -9,7 +9,7 @@
   k8s_facts:
     api_version: "route.openshift.io/v1"
     kind: Route
-    name: "{{ workshop_app_name }}"
+    name: "{{ workshop_app_name }}-spawner"
     namespace: "{{ project_name }}"
   register: __lab_route
 
