@@ -16,7 +16,7 @@
 - name: Get lab route (value)
   debug: 
     var: __lab_route
-    verbosity: 1
+    verbosity: 0
     
 - name: Set lab route
   set_fact:
